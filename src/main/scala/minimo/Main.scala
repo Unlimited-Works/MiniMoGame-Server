@@ -4,5 +4,9 @@ package minimo
   *
   */
 object Main extends App {
-  println("Hello World")
+  //init various resource
+  Config
+  Network
+
+  Thread.currentThread().join()
 }
