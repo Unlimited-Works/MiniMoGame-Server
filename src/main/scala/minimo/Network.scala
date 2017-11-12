@@ -30,7 +30,7 @@ object Network {
 
 trait Router extends (JObject => Observable[JObject]) {
   val path: String
-  def register: Unit = {
+  val register: Unit = {
     Router.routes += (path -> this)
   }
 }
