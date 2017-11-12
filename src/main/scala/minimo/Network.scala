@@ -1,8 +1,11 @@
 package minimo
 
 import net.liftweb.json.JsonAST.JObject
+import rx.lang.scala.Observable
 import rxsocket.presentation.json.{IdentityTask, JProtocol}
 import rxsocket.session.ServerEntrance
+
+import scala.concurrent.Future
 
 /**
   *
@@ -16,14 +19,35 @@ object Network {
 
   case class OverviewRsp(result: Option[OverviewContent], taskId: String) extends IdentityTask
   case class OverviewContent(id: String)
- 
+
   readerJProt.subscribe ( s =>
-    s.jRead.subscribe{ j =>
-      val jo = j.asInstanceOf[JObject]
-      val tsk = jo.\("taskId").values.toString
-      //      log(s"get jProto - $tsk")
-      s.send(OverviewRsp(Some(OverviewContent("id")), tsk))
-      s.send(OverviewRsp(None, tsk))
+    s.jRead.subscribe{ jValue =>
+      val jObj = jValue.asInstanceOf[JObject]
+      Router.dispatch(jObj).foreach(rstJObj => s.send(rstJObj))
     }
   )
+}
+
+trait Router extends (JObject => Observable[JObject]) {
+  val path: String
+  def register: Unit = {
+    Router.routes += (path -> this)
+  }
+}
+
+object Router {
+  val routes = collection.mutable.HashMap[String, Router]()
+
+  /**
+    * one request map to a observable stream
+    * @param jObject
+    * @return
+    */
+  def dispatch(jObject: JObject): Observable[JObject] = {
+    val path = (jObject \ "path" values).toString
+    val route = routes(path)
+    val result = route(jObject)
+
+    result
+  }
 }
