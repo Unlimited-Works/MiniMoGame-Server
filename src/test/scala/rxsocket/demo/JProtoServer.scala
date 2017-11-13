@@ -1,8 +1,9 @@
 package rxsocket.demo
 
+import org.json4s.JsonAST.JString
+import org.json4s.native.JsonMethods._
 import rxsocket.presentation.json.{IdentityTask, JProtocol}
 import rxsocket.session.ServerEntrance
-import net.liftweb.json.JsonAST.JString
 
 /**
   * Json presentation Example
@@ -16,7 +17,7 @@ object JProtoServer extends App{
 
   jprotoSocket.subscribe ( s =>
     s.jRead.subscribe{ j =>
-      println(s"GET_INFO - ${net.liftweb.json.compactRender(j)}")
+      println(s"GET_INFO - ${compact(render(j))}")
       val JString(tskId) = j \ "taskId" //assume has taskId for simplify
       //send multiple msg with same taskId as a stream
       s.send(Response(Some("foo"), tskId))

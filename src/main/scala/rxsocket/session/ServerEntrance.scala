@@ -1,19 +1,22 @@
 package rxsocket.session
 
 import java.net.InetSocketAddress
-import java.nio.channels.{CompletionHandler, AsynchronousSocketChannel, AsynchronousServerSocketChannel}
+import java.nio.channels.{AsynchronousServerSocketChannel, AsynchronousSocketChannel, CompletionHandler}
 
+import org.slf4j.LoggerFactory
 import rxsocket._
 import rxsocket.dispatch.{TaskKey, TaskManager}
-import rx.lang.scala.{Subscription, Subscriber, Observable}
+import rx.lang.scala.{Observable, Subscriber, Subscription}
 
-import scala.concurrent.{Promise, Future}
-import scala.util.{Success, Failure}
+import scala.concurrent.{Future, Promise}
+import scala.util.{Failure, Success}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.mutable
 //import minimo.rxscoket.session.execution.currentThread
 
 class ServerEntrance(host: String, port: Int) {
+  private val logger = LoggerFactory.getLogger(getClass)
+
   private val connectionSubs = mutable.Set[Subscriber[ConnectedSocket]]()
   private def append(s: Subscriber[ConnectedSocket]) = connectionSubs.synchronized(connectionSubs += s)
   private def remove(s: Subscriber[ConnectedSocket]) = connectionSubs.synchronized(connectionSubs -= s)
@@ -22,7 +25,7 @@ class ServerEntrance(host: String, port: Int) {
     val server = AsynchronousServerSocketChannel.open
     val socketAddress: InetSocketAddress = new InetSocketAddress(host, port)
     val prepared = server.bind(socketAddress)
-    rxsocketLogger.log(s"Server is prepare listen at - $socketAddress")
+    logger.trace(s"Server is prepare listen at - $socketAddress")
     prepared
   }
 
@@ -31,20 +34,20 @@ class ServerEntrance(host: String, port: Int) {
     * listen connection and emit every times connects event.
     */
   def listen: Observable[ConnectedSocket] = {
-    rxsocketLogger.log("listen begin - ", 1)
+    logger.trace("listen begin - ")
     connectForever()
 
     val connected = Observable.apply[ConnectedSocket]({ s =>
       append(s)
       s.add(Subscription(remove(s)))
     }).doOnCompleted {
-      rxsocketLogger.log("socket connection - doOnCompleted")
+      logger.info("socket connection - doOnCompleted")
     }
     connected
   }
 
   private def connectForever() = {
-    rxsocketLogger.log("connect loop begin -", 1)
+    logger.trace("connect loop begin -")
     val f = connection(server)
 
     def connectForeverHelper(f: Future[AsynchronousSocketChannel]): Unit = {
@@ -54,7 +57,7 @@ class ServerEntrance(host: String, port: Int) {
         case Success(c) =>
           val connectedSocket = new ConnectedSocket(c, heatBeatsManager,
             AddressPair(c.getLocalAddress.asInstanceOf[InetSocketAddress], c.getRemoteAddress.asInstanceOf[InetSocketAddress]))
-          rxsocketLogger.log(s"client connected - ${connectedSocket.addressPair.remote}", 1, Some("connect"))
+          logger.trace(s"client connected - ${connectedSocket.addressPair.remote}")
 
           val sendHeartTask = new HeartBeatSendTask(
             TaskKey(connectedSocket.addressPair.remote + ".SendHeartBeat", System.currentTimeMillis() + Configration.SEND_HEART_BEAT_BREAKTIME * 1000L),
@@ -67,7 +70,7 @@ class ServerEntrance(host: String, port: Int) {
             connectedSocket
           )
 
-          rxsocketLogger.log(s"add heart beat to mananger - $sendHeartTask; $checkHeartTask", 400, Some("heart-beat"))
+          logger.trace(s"add heart beat to mananger - $sendHeartTask; $checkHeartTask")
           heatBeatsManager.addTask(sendHeartTask)
           heatBeatsManager.addTask(checkHeartTask)
 
@@ -83,11 +86,11 @@ class ServerEntrance(host: String, port: Int) {
     val p = Promise[AsynchronousSocketChannel]
     val callback = new CompletionHandler[AsynchronousSocketChannel, AsynchronousServerSocketChannel] {
       override def completed(result: AsynchronousSocketChannel, attachment: AsynchronousServerSocketChannel): Unit = {
-        rxsocketLogger.log("connect - success")
+        logger.trace("connect - success")
         p.trySuccess(result)
       }
       override def failed(exc: Throwable, attachment: AsynchronousServerSocketChannel): Unit = {
-        rxsocketLogger.log("connect - failed")
+        logger.error("connect - failed", exc)
         p.tryFailure(exc)
       }
     }

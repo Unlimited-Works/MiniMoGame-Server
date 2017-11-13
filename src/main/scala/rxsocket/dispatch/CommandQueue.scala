@@ -2,9 +2,11 @@ package rxsocket.dispatch
 
 import java.util.concurrent.ConcurrentLinkedQueue
 
+import org.slf4j.LoggerFactory
 import rxsocket._
 
 trait CommandQueue[T] {
+  private val logger = LoggerFactory.getLogger(getClass)
   val myQueue = new ConcurrentLinkedQueue[T]()
   val lock = new Object()
   object QueueThread extends Thread {
@@ -16,7 +18,7 @@ trait CommandQueue[T] {
           lock.synchronized(lock.wait())
         } else {
           val theTask = myQueue.poll()
-          rxsocketLogger.log(s"poll task cmd queue - $theTask", 200)
+          logger.debug(s"poll task cmd queue - $theTask")
 
           receive(theTask)
         }
@@ -28,7 +30,7 @@ trait CommandQueue[T] {
 
   def tell(cmd: T) = {
     myQueue.add(cmd)
-    rxsocketLogger.log(s"tell cmd - $cmd - current count - ${myQueue.size()}", 200)
+    logger.debug(s"tell cmd - $cmd - current count - ${myQueue.size()}")
     lock.synchronized(lock.notify())
   }
 

@@ -2,23 +2,28 @@ package rxsocket.presentation.json
 
 import java.nio.charset.StandardCharsets
 
+import org.json4s.JValue
+import org.json4s._
+import org.json4s.Extraction._
+import org.json4s.native.JsonMethods._
+import org.slf4j.LoggerFactory
 import rxsocket.session
 import rxsocket._
-import net.liftweb.json.Extraction._
-import net.liftweb.json._
 
 object JsonParse {
-
+  private val logger = LoggerFactory.getLogger(getClass)
   /**
     * todo try-catch
     * @param obj case class
     */
-  def enCode(obj: Any): Array[Byte] = enCode(compactRender(decompose(obj)))
+  def enCode(obj: Any): Array[Byte] = {
+    enCode(compact(render(decompose(obj))))
+  }
 
-  def enCode(jValue: JValue): Array[Byte] = enCode(compactRender(jValue))
+  def enCode(jValue: JValue): Array[Byte] = enCode(compact(render(jValue)))
 
   def enCode(jStr: String): Array[Byte] = {
-    rxsocketLogger.log("encode jtr - " + jStr, 70)
+    logger.trace("encode jtr - " + jStr)
     session.enCode(1.toByte, jStr)
   }
 

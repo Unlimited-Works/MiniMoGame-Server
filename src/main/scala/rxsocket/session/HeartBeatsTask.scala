@@ -2,12 +2,15 @@ package rxsocket.session
 
 import java.nio.ByteBuffer
 
+import org.slf4j.LoggerFactory
 import rxsocket._
 import rxsocket.dispatch.{Task, TaskKey}
 
 class HeartBeatSendTask ( val taskId: TaskKey,
                           loopAndBreakTimes: Option[(Int, Long)] = None, // None : no next, Some(int < 0)
                           connectedSocket: ConnectedSocket) extends Task {
+  private val logger = LoggerFactory.getLogger(getClass)
+
   // pre calculate next execute time to avoid deviation after execute
   private val nextTime = loopAndBreakTimes match {
     case Some((times, breakTime)) if times != 0 => //can calculate
@@ -18,7 +21,7 @@ class HeartBeatSendTask ( val taskId: TaskKey,
   //connect http server and do the action cmd
   //when executed, tell Waiter Thread not return current thread
   override def execute(): Unit = {
-    rxsocketLogger.log("execute send heart beat task", 20)
+    logger.debug("execute send heart beat task")
 
     connectedSocket.send(ByteBuffer.wrap(session.enCode(0.toByte, "heart beat")))
   }
@@ -42,6 +45,8 @@ class HeartBeatSendTask ( val taskId: TaskKey,
 class HeartBeatCheckTask ( val taskId: TaskKey,
                            loopAndBreakTimes: Option[(Int, Long)] = None, // None : no next, Some(int < 0)
                            connectedSocket: ConnectedSocket) extends Task {
+  private val logger = LoggerFactory.getLogger(getClass)
+
   // pre calculate next execute time to avoid deviation after execute
   private val nextTime = loopAndBreakTimes match {
     case Some((times, breakTime)) if times != 0 => //able calculate
@@ -50,10 +55,10 @@ class HeartBeatCheckTask ( val taskId: TaskKey,
   }
 
   override def execute(): Unit = {
-    rxsocketLogger.log("execute check heart beat task", 20)
+    logger.debug("execute check heart beat task")
 
     if(!connectedSocket.heart) {
-      rxsocketLogger.log("disconnected because of no heart beat response", 10)
+      logger.info("disconnected because of no heart beat response")
       connectedSocket.disconnect
     } else {
       connectedSocket.heart = false

@@ -1,53 +1,142 @@
 package minimo
 
-import net.liftweb.json.JsonAST.JObject
+import minimo.network._
+import minimo.viewfirst.login.RouterLogin
+import org.json4s.JsonAST.{JObject, JString, JValue}
+import org.json4s.JsonDSL._
+import org.slf4j.LoggerFactory
 import rx.lang.scala.Observable
 import rxsocket.presentation.json.{IdentityTask, JProtocol}
 import rxsocket.session.ServerEntrance
 
-import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.{Failure, Success}
 
 /**
   *
   */
 object Network {
+  val logger = LoggerFactory.getLogger(getClass)
   //socket init
   val conntected = new ServerEntrance(Config.hostIp, Config.hostPort).listen
   val readX = conntected.map(c => (c, c.startReading))
 
   val readerJProt = readX.map(cx => new JProtocol(cx._1, cx._2))
 
-  case class OverviewRsp(result: Option[OverviewContent], taskId: String) extends IdentityTask
-  case class OverviewContent(id: String)
+  //register service
+  new RouterLogin
 
-  readerJProt.subscribe ( s =>
-    s.jRead.subscribe{ jValue =>
-      val jObj = jValue.asInstanceOf[JObject]
-      Router.dispatch(jObj).foreach(rstJObj => s.send(rstJObj))
+  //handle streams
+  readerJProt.subscribe ( skt =>
+    skt.jRead.subscribe{ jValue =>
+      val load = jValue \ "load"
+      val taskId = jValue \ "taskId"
+      val endPoint = Router.dispatch(load)
+
+      endPoint match {
+        case RawEndPoint(jValRst) =>
+          jValRst match {
+            case Failure(e) =>
+              val finalJson =
+                ("taskId" -> taskId) ~
+                ("type" -> "once") ~
+                ("status" -> "error") ~
+                ("load" -> e.getStackTrace.toString)
+              skt.send(finalJson)
+            case Success(rst) =>
+              val finalJson =
+                ("taskId" -> taskId) ~
+                  ("type" -> "once") ~
+                  ("status" -> "end") ~
+                  ("load" -> rst)
+              skt.send(finalJson)
+          }
+        case FurEndPoint(jValRstFur) =>
+          jValRstFur.foreach(jValRst => {
+            val finalJson =
+              ("taskId" -> taskId) ~
+              ("type" -> "once") ~
+              ("status" -> "end") ~
+              ("load" -> jValRst)
+            skt.send(finalJson)
+          })
+          jValRstFur.failed.foreach{ error =>
+            logger.error("FurEndPoint failed:", error)
+
+            val finalJson =
+              ("taskId" -> taskId) ~
+              ("type" -> "once") ~
+              ("status" -> "error") ~
+              ("load" -> error.getStackTrace.mkString)
+            skt.send(finalJson)
+          }
+        case StreamEndPoint(jValRst) =>
+          jValRst.subscribe(onNext = event => {
+            val finalJson: JValue =
+              ("taskId" -> taskId) ~
+              ("type" -> "stream") ~
+              ("status" -> "on") ~
+              ("load" -> event)
+
+            skt.send(finalJson)
+          },
+          onError = error => {
+            logger.error("StreamEndPoint failed:", error)
+            val finalJson: JValue =
+              ("taskId" -> taskId) ~
+              ("type" -> "stream") ~
+              ("status" -> "error") ~
+              ("load" -> error.getStackTrace.mkString)
+
+            skt.send(finalJson)
+          },
+          onCompleted = () => {
+            val finalJson: JValue =
+              ("taskId" -> taskId) ~
+              ("type" -> "stream") ~
+              ("status" -> "end")
+
+            skt.send(finalJson)
+          })
+      }
     }
   )
 }
 
-trait Router extends (JObject => Observable[JObject]) {
+/**
+  * router define how to deal with received data
+  */
+trait Router extends (JValue => EndPoint) {
   val path: String
+
   val register: Unit = {
     Router.routes += (path -> this)
   }
+
 }
 
 object Router {
+
   val routes = collection.mutable.HashMap[String, Router]()
 
   /**
     * one request map to a observable stream
-    * @param jObject
+    * protocol, eg:
+    * {
+    *   path: "Login",
+    *   protoId: "LOGIN_PROTO",
+    *   load: {
+    *     ...
+    *   }
+    * }
+    * @param load: message client send here
     * @return
     */
-  def dispatch(jObject: JObject): Observable[JObject] = {
-    val path = (jObject \ "path" values).toString
-    val route = routes(path)
-    val result = route(jObject)
+  def dispatch(load: JValue): EndPoint = {
+    val JString(path) = load \ "path"
 
-    result
+    val route = routes(path)
+    route(load)
   }
 }
+

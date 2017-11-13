@@ -1,8 +1,9 @@
 package rxsocket.dispatch
 
+import org.slf4j.LoggerFactory
 import rx.lang.scala.{Observable, Subject}
-import rxsocket.rxsocketLogger
 import rx.lang.scala.schedulers.ExecutionContextScheduler
+
 import concurrent.ExecutionContext.Implicits.global
 
 /**
@@ -15,7 +16,7 @@ import concurrent.ExecutionContext.Implicits.global
   * Notice: task should be recover by `Manage` if stop, also its matter of `Manage`
   */
 class TaskHolder {
-
+  private val logger = LoggerFactory.getLogger(getClass)
   private val subject = Subject[Task]() // emit completed event
 
   private var sleepTime: Option[Long] = None //execute if delay is navigate
@@ -45,13 +46,13 @@ class TaskHolder {
   def ready(newTask: Task): (Boolean, Option[Task]) = {
     readyUnsafe(newTask, {
       case None =>
-        rxsocketLogger.log(s"none task under waiter - $newTask", 170, Some("dispatch-ready"))
+        logger.trace(s"none task under waiter - $newTask")
         true
       case Some(nowTask) if newTask.taskId.systemTime < nowTask.taskId.systemTime =>
-        rxsocketLogger.log(s"replace older waiting task - $nowTask; the task - $newTask", 170, Some("dispatch-ready"))
+        logger.trace(s"replace older waiting task - $nowTask; the task - $newTask")
         true
       case Some(nowTask) =>
-        rxsocketLogger.log(s"can't replace older task - $nowTask; the task - $newTask", 170, Some("dispatch-ready"))
+        logger.trace(s"can't replace older task - $nowTask; the task - $newTask")
         false
     })
   }
@@ -82,7 +83,7 @@ class TaskHolder {
       currentTask = Some(newTask)
       sleepTime = Some(newTask.taskId.systemTime - System.currentTimeMillis())
 
-      rxsocketLogger.log(s"ready - $newTask; currentTime - ${System.currentTimeMillis()}", 120, Some("dispatch-readyUnsafe"))
+      logger.trace(s"ready - $newTask; currentTime - ${System.currentTimeMillis()}")
       //after set all status, let's continue with new task
       godLock.synchronized(godLock.notify())
       (true, replacedTask)
@@ -109,23 +110,23 @@ class TaskHolder {
     setDaemon(true)
     setName("Thread-Waiter")
     override def run(): Unit = {
-      rxsocketLogger.log("Waiter thread begin to run", 200)
+      logger.trace("Waiter thread begin to run")
       godLock.synchronized {
         while(true) {
-          rxsocketLogger.log(s"loop - ${System.currentTimeMillis()}; cancel - $canceling", 150)
+          logger.trace(s"loop - ${System.currentTimeMillis()}; cancel - $canceling")
 
           sleepTime match {
             case None =>
               initStatus()
-              rxsocketLogger.log(s"Waiter sleep - $sleepTime", 150)
+              logger.trace(s"Waiter sleep - $sleepTime")
               godLock.wait()
-              rxsocketLogger.log(s"Waiter awake - ${System.currentTimeMillis()}", 150)
+              logger.trace(s"Waiter awake - ${System.currentTimeMillis()}")
             case Some(delay) =>
               if (!canceling) { //canceling handle execute action and wait.
                 if (delay > 0L) {
-                  rxsocketLogger.log(s"sleep with delay Time - $sleepTime", 150, Some("Waiter"))
+                  logger.trace(s"sleep with delay Time - $sleepTime")
                   godLock.wait(delay)
-                  rxsocketLogger.log(s"awake with delay Time - ${System.currentTimeMillis()}", 150, Some("Waiter"))
+                  logger.trace(s"awake with delay Time - ${System.currentTimeMillis()}")
                 }
                 //ensure doesn't canceling after awake
                 if (!canceling) {//canceling is false - needn't canceling
@@ -134,14 +135,14 @@ class TaskHolder {
                   action.foreach { t =>
                     tempTask = Some(t())
                   } //execute action
-                  rxsocketLogger.log("executed action - ", 150, aim = Some("Waiter"))
+                  logger.trace("executed action - ")
                   initStatus()
                   tempTask.foreach(subject.onNext)
                 }
               } else {
                 //canceling as true - cancel mean skip the action. it does!
                 //after skip the action we set canceling as false
-                rxsocketLogger.log(s"cancel waiter - ${System.currentTimeMillis()}", 150, aim = Some("Waiter"))
+                logger.trace(s"cancel waiter - ${System.currentTimeMillis()}")
                 canceling = false
               }
           }

@@ -2,9 +2,9 @@ package rxsocket.dispatch
 
 import java.util
 
-import rxsocket.rxsocketLogger
-
 import java.util.Comparator
+
+import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
 import scala.concurrent.Promise
@@ -16,6 +16,8 @@ import scala.concurrent.Promise
   *   2. remove a task from DataSet only it was executed or cancel by user.
   */
 class TaskManager {
+  private val logger = LoggerFactory.getLogger(getClass)
+
   import TaskCommandQueue._
   object TaskCommandQueue {
     trait Action
@@ -31,11 +33,11 @@ class TaskManager {
     private def addTaskSync(task: Task) = {
       DataSet.put(task)
       dispatch.ready(task)
-      rxsocketLogger.log("addTask - " + task, 150)
+      logger.trace("addTask - " + task)
     }
     protected override def receive(action: Action): Unit = action match {
       case Cancel(id: String, promise: Promise[Option[Task]]) =>
-        rxsocketLogger.log(s"ready cancel task - $id", 150)
+        logger.trace(s"ready cancel task - $id")
         val tryGetTask = List(
           dispatch.cancelCurrentTaskIf((waitingTask) => {
             waitingTask.taskId.id == id
@@ -49,24 +51,24 @@ class TaskManager {
         promise.trySuccess(DataSet.get(id))
       case GetCount(promise: Promise[Int]) =>
         val x = DataSet.size
-        rxsocketLogger.log(s"GetCount - $x", 300)
+        logger.trace(s"GetCount - $x")
         promise.trySuccess(x)
       case NextTask(lastTask) =>
         DataSet.get(lastTask.taskId) match {
           case None => //has removed, DON'T calculate nextTask even though the Task has next task
-            rxsocketLogger.log("has removed and needn't get `nextTask`- " + lastTask, 300)
+            logger.trace("has removed and needn't get `nextTask`- " + lastTask)
           case Some(_) =>
-            rxsocketLogger.log("get last task - " + lastTask, 300)
+            logger.trace("get last task - " + lastTask)
             DataSet.update(lastTask.taskId, lastTask.nextTask)
         }
 
         //get next task, put it to task set
         DataSet.getFirst.foreach { task =>
-          rxsocketLogger.log("ready task - " + task, 170, Some("manager"))
+          logger.trace("ready task - " + task)
           addTaskSync(task) //can't use `tell` because it will break `NextTask` actions
         }
 
-        rxsocketLogger.log("DataSet count after `NextTask` - " + DataSet.size, 150)
+        logger.trace("DataSet count after `NextTask` - " + DataSet.size)
     }
 
 
@@ -98,7 +100,7 @@ class TaskManager {
       def put(task: Task): Unit = {
         auxiliaryMap.put(task.taskId.id, task.taskId)
         tasks.put(task.taskId, task)
-        rxsocketLogger.log(s"put to tasksMap - ${tasks.get(task.taskId)}", 300)
+        logger.trace(s"put to tasksMap - ${tasks.get(task.taskId)}")
       }
 
       def get(taskKey: TaskKey) = {
@@ -115,7 +117,7 @@ class TaskManager {
         Option{
           val removed = tasks.remove(taskKey)
           Option(removed).foreach(x => auxiliaryMap.remove(x.taskId.id))
-          rxsocketLogger.log(s"remove - $taskKey - form tasksMap - $removed; tasks.size = ${tasks.size()}", 100)
+          logger.trace(s"remove - $taskKey - form tasksMap - $removed; tasks.size = ${tasks.size()}")
           removed
         }
       }
@@ -123,7 +125,7 @@ class TaskManager {
       def remove(taskId: String) = {
         auxiliaryMap.remove(taskId).map { taskKey =>
           val removed = tasks.remove(taskKey)
-          rxsocketLogger.log(s"remove - $taskKey - form tasksMap - $removed; tasks.size = ${tasks.size()}", 100)
+          logger.trace(s"remove - $taskKey - form tasksMap - $removed; tasks.size = ${tasks.size()}")
           removed
         }
       }

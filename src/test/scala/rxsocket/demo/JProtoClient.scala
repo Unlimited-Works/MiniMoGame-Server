@@ -1,25 +1,25 @@
 package rxsocket.demo
 
+import org.slf4j.LoggerFactory
 import rxsocket._
-import rxsocket.presentation.json.{JProtocol, IdentityTask}
+import rxsocket.presentation.json.{IdentityTask, JProtocol}
 import rxsocket.session.ClientEntrance
 import rx.lang.scala.Observable
 
-import scala.concurrent.{Promise, Future}
-
+import scala.concurrent.{Future, Promise}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
   * Json presentation Example
   */
 object JProtoClient extends App {
-
+  private val logger = LoggerFactory.getLogger(getClass)
   val client = new ClientEntrance("localhost", 10011).connect
   val jproto = client.map { x => new JProtocol(x, x.startReading) }
 
   val namesFur = getMyNames("admin")
 
-  namesFur.foreach(names => rxsocketLogger.log(names))
+  namesFur.foreach(names => logger.info(names.toString))
 
   Thread.currentThread().join()
 

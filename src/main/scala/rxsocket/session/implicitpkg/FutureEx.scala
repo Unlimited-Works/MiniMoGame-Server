@@ -1,6 +1,6 @@
 package rxsocket.session.implicitpkg
 
-import rxsocket.rxsocketLogger
+//import rxsocket.rxsocketLogger
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future, Promise, blocking}
@@ -14,7 +14,7 @@ class FutureEx[T](f: Future[T]) {
     Future {
       blocking(Thread.sleep(ms))
       if(!f.isCompleted) {
-        rxsocketLogger.log(s"[Throw] - FutureTimeoutException after - ${ms}ms", 15)
+//        rxsocketLogger.log(s"[Throw] - FutureTimeoutException after - ${ms}ms", 15)
         p.tryFailure(new FutureTimeoutException)
       } else {
         p.tryFailure(new FutureTimeoutNotOccur)

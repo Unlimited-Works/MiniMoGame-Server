@@ -1,11 +1,10 @@
 package rxsocket.session
 
 import java.net.{InetSocketAddress, SocketAddress}
-import java.nio.ByteBuffer
-import java.nio.channels.{CompletionHandler, AsynchronousSocketChannel}
+import java.nio.channels.{AsynchronousSocketChannel, CompletionHandler}
 
-import rxsocket._
-import rxsocket.dispatch.{TaskManager, TaskKey}
+import org.slf4j.LoggerFactory
+import rxsocket.dispatch.{TaskKey, TaskManager}
 import rxsocket.session.implicitpkg._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -15,6 +14,8 @@ import scala.concurrent.Promise
   *
   */
 class ClientEntrance(remoteHost: String, remotePort: Int) {
+  private val logger = LoggerFactory.getLogger(getClass)
+
   val channel: AsynchronousSocketChannel = AsynchronousSocketChannel.open
   val serverAddr: SocketAddress = new InetSocketAddress(remoteHost, remotePort)
 
@@ -23,7 +24,7 @@ class ClientEntrance(remoteHost: String, remotePort: Int) {
     val p = Promise[ConnectedSocket]
     channel.connect(serverAddr, channel, new CompletionHandler[Void, AsynchronousSocketChannel]{
       override def completed(result: Void, attachment: AsynchronousSocketChannel): Unit = {
-        rxsocketLogger.log(s"linked to server success", 1)
+        logger.debug(s"linked to server success")
         val connectedSocket = new ConnectedSocket(attachment, heartBeatManager,
           AddressPair(channel.getLocalAddress.asInstanceOf[InetSocketAddress], channel.getRemoteAddress.asInstanceOf[InetSocketAddress])
         )
@@ -44,7 +45,7 @@ class ClientEntrance(remoteHost: String, remotePort: Int) {
       }
 
       override def failed(exc: Throwable, attachment: AsynchronousSocketChannel): Unit = {
-        rxsocketLogger.log(s"linked to server error - $exc", 1)
+        logger.debug(s"linked to server error - $exc")
         p.tryFailure(exc)
       }
     })

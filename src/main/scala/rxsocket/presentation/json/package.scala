@@ -1,6 +1,6 @@
 package rxsocket.presentation
 
-import net.liftweb.json.DefaultFormats
+import org.json4s.DefaultFormats
 
 /**
   *

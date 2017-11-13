@@ -1,25 +1,38 @@
 package minimo.viewfirst.login
 
 import minimo.Router
-import net.liftweb.json.JsonAST
-import net.liftweb.json.JsonAST.{JField, JObject, JString}
-import rx.lang.scala.Subject
+import minimo.network._
+import org.json4s.JsonAST._
+import org.json4s.JsonDSL._
+import org.json4s.{DefaultFormats, JsonAST}
+
+import scala.util.{Success, Try}
 
 /**
   *
   */
 class RouterLogin extends Router {
+  implicit val formats = DefaultFormats
 
   override val path = "login"
 
-  override def apply(reqJson: JsonAST.JObject) = {
-    (reqJson \ "protoId" values).toString match {
+  override def apply(reqJson: JValue): EndPoint = {
+    val JString(protoId) = reqJson \ "protoId"
+    protoId match {
       case PROTO_LOGIN =>
-        reqJson \ "load" values
-        val obv = Subject[JObject]
-        obv.onNext(JObject(JField("testName", JString("testValue"))))
-        obv.onCompleted()
-        obv
+        val LoginProtoReq(username, password) = (reqJson \ "load" values).asInstanceOf[JObject].extract[LoginProtoReq]
+
+        //do database search
+        val jsonRsp: JValue =
+          if(username == "admin" && password == "admin") {
+            "login" -> true
+          } else {
+            "result" -> false
+          }
+
+        RawEndPoint(Success(jsonRsp))
     }
   }
 }
+
+case class LoginProtoReq(username: String, password: String)

@@ -2,15 +2,18 @@ package rxsocket.session
 
 import java.nio.ByteBuffer
 
+import org.slf4j.LoggerFactory
 import rxsocket.session
 import rxsocket.session.exception.TmpBufferOverLoadException
 import rxsocket.session.implicitpkg._
-import rxsocket.rxsocketLogger
+
 import scala.annotation.tailrec
 /**
   * one map to for every socket
   */
 class ReaderDispatch(private var tmpProto: PaddingProto, maxLength: Int = Configration.TEMPBUFFER_LIMIT) {//extends Subject[]{
+  private val logger = LoggerFactory.getLogger(getClass)
+
   def this() = {
     this(PaddingProto(None, None, session.EmptyByteBuffer))
   }
@@ -44,7 +47,7 @@ class ReaderDispatch(private var tmpProto: PaddingProto, maxLength: Int = Config
           }
           else {
             val length = bf.getInt()
-            rxsocketLogger.log(s"${this.getClass.toString} : get length - $length", 60)
+            logger.trace(s"${this.getClass.toString} : get length - $length")
             Some(CompletedLength(length))
           }
         case pendingOpt @ Some(pendingLength) =>
@@ -80,7 +83,7 @@ class ReaderDispatch(private var tmpProto: PaddingProto, maxLength: Int = Config
         val newAf = new Array[Byte](length)
         src.get(newAf, 0, length)
         val completed = CompletedProto(paddingProto.uuidOpt.get, length, ByteBuffer.wrap(newAf))
-        rxsocketLogger.log(s"${this.getClass.toString} : get protocol - ${(completed.uuid, completed.length, new String(completed.loaded.array))}", 85, Some("get protocol"))
+        logger.trace(s"${this.getClass.toString} : get protocol - ${(completed.uuid, completed.length, new String(completed.loaded.array))}")
         Some(completed)
       }
     }
@@ -89,7 +92,7 @@ class ReaderDispatch(private var tmpProto: PaddingProto, maxLength: Int = Config
         val uuidOpt = tryGetByte(src)
         tmpProto = PaddingProto(uuidOpt, None, null)
         val lengthOpt = uuidOpt.flatMap{uuid =>
-          rxsocketLogger.log(s"${this.getClass.toString} : get uuid - $uuid", 60)
+          logger.trace(s"${this.getClass.toString} : get uuid - $uuid")
           tryGetLength(src, None)
         }
         val protoOpt = lengthOpt.flatMap {
@@ -104,7 +107,7 @@ class ReaderDispatch(private var tmpProto: PaddingProto, maxLength: Int = Config
               val newAf = new Array[Byte](length)
               src.get(newAf, 0, length)
               val completed = CompletedProto(uuidOpt.get, length, ByteBuffer.wrap(newAf))
-              rxsocketLogger.log(s"${this.getClass.toString} : get protocol - ${(completed.uuid, completed.length, new String(completed.loaded.array))}", 85, Some("get protocol"))
+              logger.trace(s"${this.getClass.toString} : get protocol - ${(completed.uuid, completed.length, new String(completed.loaded.array))}")
               Some(completed)
             }
           case PendingLength(arrived, number) => //todo PendingLength(_, _)
@@ -161,7 +164,7 @@ class ReaderDispatch(private var tmpProto: PaddingProto, maxLength: Int = Config
           src.get(newAf, 0, needLength)
 
           val completed = CompletedProto(uuid, length, padding.put(newAf))
-          rxsocketLogger.log(s"${this.getClass.toString} : get protocol - ${(completed.uuid, completed.length, new String(completed.loaded.array))}", 85, Some("get protocol"))
+          logger.info(s"${this.getClass.toString} : get protocol - ${(completed.uuid, completed.length, new String(completed.loaded.array))}")
           Some(completed)
         }
         protoOpt match {
