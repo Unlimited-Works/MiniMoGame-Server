@@ -15,7 +15,7 @@ import scala.util.{Failure, Success}
 /**
   *
   */
-object Network {
+class Network(routes: List[Router]) {
   val logger = LoggerFactory.getLogger(getClass)
   //socket init
   val conntected = new ServerEntrance(Config.hostIp, Config.hostPort).listen
@@ -24,15 +24,36 @@ object Network {
   val readerJProt = readX.map(cx => new JProtocol(cx._1, cx._2))
 
   //register service
-  new RouterLogin
+//  new RouterLogin
 
   //handle streams
   readerJProt.subscribe ( skt =>
     skt.jRead.subscribe{ jValue =>
+
+      /**
+        * protocol form client:
+        * {
+        *   taskId: ...
+        *   load: {
+        *     ...
+        *   }
+        * }
+        */
       val load = jValue \ "load"
       val taskId = jValue \ "taskId"
       val endPoint = Router.dispatch(load)
 
+      /**
+        * protocol to client:
+        * {
+        *   taskId: ...
+        *   type: ...
+        *   status: ...
+        *   load: {
+        *     ...
+        *   }
+        * }
+        */
       endPoint match {
         case RawEndPoint(jValRst) =>
           jValRst match {

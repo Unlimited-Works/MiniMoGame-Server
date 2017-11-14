@@ -1,12 +1,14 @@
 package minimo
 
+import minimo.viewfirst.login.RouterLogin
+
 /**
   *
   */
 object Main extends App {
   //init various resource
   Config
-  Network
+  new Network(new RouterLogin :: Nil)
 
   Thread.currentThread().join()
 }
