@@ -4,5 +4,5 @@ package minimo.viewfirst
   *
   */
 package object login {
-  val PROTO_LOGIN = "LOGIN"
+  val LOGIN_PROTO = "LOGIN_PROTO"
 }

@@ -22,10 +22,11 @@
         </rollingPolicy>
     </appender>
 
-    <root level="TRACE">
+    <root level="INFO">
         <appender-ref ref="stdout" />
         <appender-ref ref="file" />
     </root>
 
-    <!--<logger name="org.apache" level="WARN"/>-->
+    <logger name="minimo.viewfirst.login" level="DEBUG"/>
+    <logger name="minimo.Network" level="DEBUG"/>
 </configuration>

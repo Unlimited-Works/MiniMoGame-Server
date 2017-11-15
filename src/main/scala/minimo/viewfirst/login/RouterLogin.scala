@@ -5,6 +5,7 @@ import minimo.network._
 import org.json4s.JsonAST._
 import org.json4s.JsonDSL._
 import org.json4s.{DefaultFormats, JsonAST}
+import org.slf4j.LoggerFactory
 
 import scala.util.{Success, Try}
 
@@ -12,22 +13,24 @@ import scala.util.{Success, Try}
   *
   */
 class RouterLogin extends Router {
+  private val logger = LoggerFactory.getLogger(getClass)
   implicit val formats = DefaultFormats
 
   override val path = "login"
 
   override def apply(reqJson: JValue): EndPoint = {
+    logger.debug("getjson - " + reqJson)
     val JString(protoId) = reqJson \ "protoId"
     protoId match {
-      case PROTO_LOGIN =>
-        val LoginProtoReq(username, password) = (reqJson \ "load" values).asInstanceOf[JObject].extract[LoginProtoReq]
+      case LOGIN_PROTO =>
+        val LoginProtoReq(username, password) = (reqJson \ "load").extract[LoginProtoReq] //.as[JObject].extract[LoginProtoReq]
 
         //do database search
         val jsonRsp: JValue =
           if(username == "admin" && password == "admin") {
-            "login" -> true
+            true
           } else {
-            "result" -> false
+            false
           }
 
         RawEndPoint(Success(jsonRsp))
@@ -35,4 +38,4 @@ class RouterLogin extends Router {
   }
 }
 
-case class LoginProtoReq(username: String, password: String)
+case class LoginProtoReq(userName: String, password: String)

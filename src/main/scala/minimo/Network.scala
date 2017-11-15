@@ -25,7 +25,7 @@ class Network(routes: List[Router]) {
 
   //register service
 //  new RouterLogin
-
+  routes.foreach(_.register)
   //handle streams
   readerJProt.subscribe ( skt =>
     skt.jRead.subscribe{ jValue =>
@@ -43,6 +43,7 @@ class Network(routes: List[Router]) {
       val taskId = jValue \ "taskId"
       val endPoint = Router.dispatch(load)
 
+      logger.debug("result message - " + endPoint)
       /**
         * protocol to client:
         * {
@@ -130,7 +131,7 @@ class Network(routes: List[Router]) {
 trait Router extends (JValue => EndPoint) {
   val path: String
 
-  val register: Unit = {
+  lazy val register: Unit = {
     Router.routes += (path -> this)
   }
 
@@ -142,7 +143,7 @@ object Router {
 
   /**
     * one request map to a observable stream
-    * protocol, eg:
+    * load protocol, eg:
     * {
     *   path: "Login",
     *   protoId: "LOGIN_PROTO",
