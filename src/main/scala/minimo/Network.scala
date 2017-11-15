@@ -15,10 +15,10 @@ import scala.util.{Failure, Success}
 /**
   *
   */
-class Network(routes: List[Router]) {
+class Network(host: String, port: Int, routes: List[Router]) {
   val logger = LoggerFactory.getLogger(getClass)
   //socket init
-  val conntected = new ServerEntrance(Config.hostIp, Config.hostPort).listen
+  val conntected = new ServerEntrance(host, port).listen
   val readX = conntected.map(c => (c, c.startReading))
 
   val readerJProt = readX.map(cx => new JProtocol(cx._1, cx._2))

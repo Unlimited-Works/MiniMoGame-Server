@@ -14,7 +14,7 @@ object Main extends App {
   rxsocket.session.Configration.SEND_HEART_BEAT_BREAKTIME = Int.MaxValue
 
   //start network server
-  new Network(new RouterLogin :: Nil)
+  new Network(Config.hostIp, Config.hostPort, new RouterLogin :: Nil)
 
   Thread.currentThread().join()
 }
