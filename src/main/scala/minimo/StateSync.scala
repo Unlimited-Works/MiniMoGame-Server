@@ -3,6 +3,6 @@ package minimo
 /**
   *
   */
-package object core {
+class StateSync {
 
 }

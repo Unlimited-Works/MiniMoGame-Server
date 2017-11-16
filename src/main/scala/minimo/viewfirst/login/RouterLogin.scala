@@ -1,11 +1,10 @@
 package minimo.viewfirst.login
 
-import minimo.Router
-import minimo.network._
 import org.json4s.JsonAST._
 import org.json4s.JsonDSL._
 import org.json4s.{DefaultFormats, JsonAST}
 import org.slf4j.LoggerFactory
+import rxsocket.presentation.json.{EndPoint, RawEndPoint, Router}
 
 import scala.util.{Success, Try}
 

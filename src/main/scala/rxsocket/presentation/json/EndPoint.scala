@@ -1,4 +1,4 @@
-package minimo.network
+package rxsocket.presentation.json
 
 import org.json4s.JsonAST.JValue
 import rx.lang.scala.Observable

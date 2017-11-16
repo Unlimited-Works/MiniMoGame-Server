@@ -10,3 +10,6 @@ target/
 *.log
 *.test
 .secret
+
+# private config
+online.conf
