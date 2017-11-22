@@ -13,3 +13,4 @@ target/
 
 # private config
 online.conf
+local.conf
