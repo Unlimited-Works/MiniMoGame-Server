@@ -1,8 +1,8 @@
-package minimo.viewfirst
+package minimo
 
 /**
   *
   */
-package object login {
+package object route {
   val LOGIN_PROTO = "LOGIN_PROTO"
 }

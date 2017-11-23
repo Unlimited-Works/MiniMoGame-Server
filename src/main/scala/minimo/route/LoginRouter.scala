@@ -1,17 +1,17 @@
-package minimo.viewfirst.login
+package minimo.route
 
+import org.json4s.DefaultFormats
 import org.json4s.JsonAST._
 import org.json4s.JsonDSL._
-import org.json4s.{DefaultFormats, JsonAST}
 import org.slf4j.LoggerFactory
 import rxsocket.presentation.json.{EndPoint, RawEndPoint, Router}
 
-import scala.util.{Success, Try}
+import scala.util.Success
 
 /**
   *
   */
-class RouterLogin extends Router {
+class LoginRouter extends Router {
   private val logger = LoggerFactory.getLogger(getClass)
   implicit val formats = DefaultFormats
 

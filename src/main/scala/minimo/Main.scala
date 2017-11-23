@@ -1,7 +1,7 @@
 package minimo
 
-import minimo.viewfirst.login.RouterLogin
 import org.slf4j.LoggerFactory
+import route.RouterLogin
 
 /**
   *
