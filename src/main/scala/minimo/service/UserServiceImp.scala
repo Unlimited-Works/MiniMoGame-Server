@@ -15,11 +15,11 @@ class UserServiceImp extends UserService {
   }
 
   override def registerAccount(userName: String, password: String): Either[String, ObjectId] = synchronized {
-    UserDao.checkUserPwd(userName, password) match {
+    UserDao.checkUserExist(userName) match {
       case None =>
         Right(UserDao.saveUser(userName, util.md5(password)))
       case Some(_) =>
-        Left("user_has_exist")
+        Left("user_already_exist")
     }
 
   }

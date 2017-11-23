@@ -26,4 +26,11 @@ object UserDao {
     }
     run(q).headOption
   }
+
+  def checkUserExist(username: String): Option[Users] = {
+    val q = quote {
+      query[Users].filter(user => user.userName == lift(username)).take(1)
+    }
+    run(q).headOption
+  }
 }
