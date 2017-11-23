@@ -20,9 +20,9 @@ object UserDao {
     oid
   }
 
-  def checkUserPwd(username: String, password: String): Option[Users] = {
+  def checkUserPwd(username: String, password: String): Option[ObjectId] = {
     val q = quote {
-      query[Users].filter(user => user.userName == lift(username) && user.pwd == lift(password)).take(1)
+      query[Users].filter(user => user.userName == lift(username) && user.pwd == lift(password)).map(_.oid).take(1)
     }
     run(q).headOption
   }
