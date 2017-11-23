@@ -46,10 +46,10 @@ class LoginRouter extends Router {
           userSerivce.registerAccount(username, password) match {
             case Right(oid) =>
               ("status" -> 200) ~
-              ("info" -> oid.toString)
+              ("oid" -> oid.toString)
             case Left(error) =>
               ("status" -> 400) ~
-              ("info" -> error)
+              ("error" -> error)
 
           }
 
