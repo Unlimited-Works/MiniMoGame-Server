@@ -4,7 +4,7 @@ import org.json4s.DefaultFormats
 import org.json4s.JsonAST._
 import org.json4s.JsonDSL._
 import org.slf4j.LoggerFactory
-import rxsocket.presentation.json.{EndPoint, RawEndPoint, Router}
+import rxsocket.presentation.json.{EmptyEndPoint, EndPoint, RawEndPoint, Router}
 
 import scala.util.Success
 import minimo.service
@@ -15,14 +15,14 @@ import minimo.service.api.UserService
   */
 class LoginRouter extends Router {
   private val logger = LoggerFactory.getLogger(getClass)
-  implicit val formats = DefaultFormats
+  implicit val formats: DefaultFormats.type = DefaultFormats
 
   val userSerivce: UserService = service.userService
 
   override val path = "login"
 
   override def apply(reqJson: JValue): EndPoint = {
-    logger.debug("getjson - " + reqJson)
+    logger.debug("get_json:" + reqJson)
     val JString(protoId) = reqJson \ "protoId"
     protoId match {
       case LOGIN_PROTO =>
@@ -56,6 +56,9 @@ class LoginRouter extends Router {
         }
 
         RawEndPoint(Success(jsonRsp))
+      case undefined =>
+        logger.warn(s"undefined_protoId: $undefined")
+        EmptyEndPoint
     }
   }
 }

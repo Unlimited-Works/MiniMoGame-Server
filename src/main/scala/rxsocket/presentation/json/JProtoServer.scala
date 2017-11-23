@@ -105,6 +105,7 @@ class JProtoServer(jProtos: Observable[JProtocol], routes: List[Router]) {
 
               skt.send(finalJson)
             })
+        case EmptyEndPoint => Unit
       }
     }
   )
