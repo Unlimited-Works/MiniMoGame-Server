@@ -1,7 +1,7 @@
 package minimo
 
 import org.slf4j.LoggerFactory
-import route.RouterLogin
+import route.LoginRouter
 
 /**
   *
@@ -9,7 +9,7 @@ import route.RouterLogin
 object Main extends App {
   private val logger = LoggerFactory.getLogger(this.getClass)
 
-  //init config and print config information
+  //init config
   MinimoConfig
 
   //forbid heart beat for simple
@@ -18,7 +18,7 @@ object Main extends App {
 
   //start network server
   logger.info(s"starting network at: ${MinimoConfig.network}")
-  new Network(MinimoConfig.network.host, MinimoConfig.network.port, new RouterLogin :: Nil)
+  new Network(MinimoConfig.network.host, MinimoConfig.network.port, new LoginRouter :: Nil)
 
   Thread.currentThread().join()
 }

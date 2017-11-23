@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory
 import rxsocket.presentation.json.{EndPoint, RawEndPoint, Router}
 
 import scala.util.Success
+import minimo.service
+import minimo.service.api.UserService
 
 /**
   *
@@ -15,6 +17,8 @@ class LoginRouter extends Router {
   private val logger = LoggerFactory.getLogger(getClass)
   implicit val formats = DefaultFormats
 
+  val userSerivce: UserService = service.userService
+
   override val path = "login"
 
   override def apply(reqJson: JValue): EndPoint = {
@@ -22,19 +26,38 @@ class LoginRouter extends Router {
     val JString(protoId) = reqJson \ "protoId"
     protoId match {
       case LOGIN_PROTO =>
-        val LoginProtoReq(username, password) = (reqJson \ "load").extract[LoginProtoReq] //.as[JObject].extract[LoginProtoReq]
+        val LoginOrRegReq(username, password) = (reqJson \ "load").extract[LoginOrRegReq]
 
         //do database search
-        val jsonRsp: JValue =
-          if(username == "admin" && password == "admin") {
-            true
-          } else {
-            false
+        val jsonRsp: JValue = {
+          userSerivce.loginVerify(username, password) match {
+            case Some(oid) => true
+            case None => false
           }
+
+        }
+
+        RawEndPoint(Success(jsonRsp))
+      case REGISTER_PROTO =>
+        val LoginOrRegReq(username, password) = (reqJson \ "load").extract[LoginOrRegReq]
+
+        //do database search
+        val jsonRsp: JValue = {
+          userSerivce.registerAccount(username, password) match {
+            case Right(oid) =>
+              ("status" -> 200) ~
+              ("info" -> oid.toString)
+            case Left(error) =>
+              ("status" -> 400) ~
+              ("info" -> error)
+
+          }
+
+        }
 
         RawEndPoint(Success(jsonRsp))
     }
   }
 }
 
-case class LoginProtoReq(userName: String, password: String)
+case class LoginOrRegReq(userName: String, password: String)

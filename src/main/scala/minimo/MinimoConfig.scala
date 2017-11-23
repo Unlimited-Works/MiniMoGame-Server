@@ -23,6 +23,7 @@ object MinimoConfig {
 
   //library or custom config
   val quill: Config = combinedConfig.getConfig("ctx")
+
   val network: Network = {
     val nconfig = combinedConfig.getConfig("minimo.network")
     Network(nconfig.getString("host"), nconfig.getInt("port"))
