@@ -6,14 +6,13 @@ import io.getquill._
   *
   */
 package object dao {
-  object EscapeAndSnake extends CompositeNamingStrategy {
-    override val elements: List[NamingStrategy] = PostgresEscape :: SnakeCase :: Nil
-  }
-
-  lazy val ctx = new PostgresJdbcContext(EscapeAndSnake, MinimoConfig.quill)//new SqlMirrorContext(MirrorSqlDialect, Literal)
+  lazy val ctx = new PostgresJdbcContext(
+    NamingStrategy(SnakeCase, PostgresEscape),
+    MinimoConfig.quill
+  )
 
 //  extends field type
-  implicit val encodeObjectId: MappedEncoding[ObjectId, Array[Byte]] = MappedEncoding[ObjectId, Array[Byte]](_.toByteArray)
-  implicit val decodeObjectId: MappedEncoding[Array[Byte], ObjectId] = MappedEncoding[Array[Byte], ObjectId](x => new ObjectId(x))
+  implicit val encodeObjectId: MappedEncoding[ObjectId, String] = MappedEncoding[ObjectId, String](_.toString)
+  implicit val decodeObjectId: MappedEncoding[String, ObjectId] = MappedEncoding[String, ObjectId](new ObjectId(_))
 
 }
