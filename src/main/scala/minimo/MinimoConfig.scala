@@ -15,10 +15,11 @@ object MinimoConfig {
   private val online = ConfigFactory.parseResourcesAnySyntax("online")
   private val local = ConfigFactory.parseResourcesAnySyntax("local")
   private val develop = ConfigFactory.parseResourcesAnySyntax("application")
+  private val reference = ConfigFactory.parseResourcesAnySyntax("reference")
   private val default = ConfigFactory.load() //default environment
 
   //global config
-  val myConfig: Config = fileConf.withFallback(online).withFallback(local).withFallback(develop)
+  val myConfig: Config = fileConf.withFallback(online).withFallback(local).withFallback(develop).withFallback(reference)
   val combinedConfig: Config = myConfig.withFallback(default)
 
   //library or custom config
@@ -29,11 +30,10 @@ object MinimoConfig {
     Network(nconfig.getString("host"), nconfig.getInt("port"))
   }
 
-  def printConf(config: Config, info: String = ""): Unit = logger.info(info + "\n" + config.root().render(ConfigRenderOptions.concise().setFormatted(true).setJson(true)))
+  def confInfo(config: Config, info: String = ""): String = info + ": " + config.root().render(ConfigRenderOptions.concise().setFormatted(true).setJson(true))
 
-
-  MinimoConfig.printConf(MinimoConfig.myConfig, "my_config")
-  MinimoConfig.printConf(MinimoConfig.combinedConfig, "combined_config")
+  logger.info(confInfo(MinimoConfig.myConfig, "my_config"))
+  logger.debug(confInfo(MinimoConfig.combinedConfig, "combined_config"))
 
   case class Network(host: String, port: Int)
 }

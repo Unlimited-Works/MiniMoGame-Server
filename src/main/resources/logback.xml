@@ -28,6 +28,6 @@
         <appender-ref ref="file" />
     </root>
 
-    <logger name="minimo.viewfirst.login" level="DEBUG"/>
-    <logger name="minimo.Network" level="DEBUG"/>
+    <!--<logger name="minimo.route.LoginRouter" level="DEBUG"/>-->
+    <!--<logger name="minimo.Network" level="DEBUG"/>-->
 </configuration>

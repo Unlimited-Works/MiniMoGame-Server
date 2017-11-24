@@ -55,6 +55,7 @@ class LoginRouter extends Router {
 
         }
 
+        logger.debug(s"register_rsp: $jsonRsp")
         RawEndPoint(Success(jsonRsp))
       case undefined =>
         logger.warn(s"undefined_protoId: $undefined")
