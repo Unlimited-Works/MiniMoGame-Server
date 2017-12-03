@@ -10,7 +10,7 @@ import minimo.util
 class UserServiceImp extends UserService {
 
   override def loginVerify(userName: String, password: String): Option[ObjectId] = {
-    UserDao.checkUserPwd(userName, password)
+    UserDao.checkUserPwd(userName, util.md5(password))
 
   }
 
