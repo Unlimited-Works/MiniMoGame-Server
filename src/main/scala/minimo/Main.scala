@@ -18,7 +18,10 @@ object Main extends App {
 
   //start network server
   logger.info(s"starting network at: ${MinimoConfig.network}")
-  new Network(MinimoConfig.network.host, MinimoConfig.network.port, new LoginRouter :: Nil)
+  new Network(
+    MinimoConfig.network.host,
+    MinimoConfig.network.port,
+    new LoginRouter :: Nil)
 
   Thread.currentThread().join()
 }
