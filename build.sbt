@@ -10,6 +10,6 @@ libraryDependencies ++= Seq(
   "ch.qos.logback" % "logback-classic" % "1.2.3",
   "com.typesafe" % "config" % "1.3.1",
   "org.postgresql" % "postgresql" % "42.1.4",
-  "io.getquill" %% "quill-jdbc" % "2.2.0",
+  "io.getquill" %% "quill-jdbc" % "2.3.1",
   "junit" % "junit" % "4.12" % Test,
 )

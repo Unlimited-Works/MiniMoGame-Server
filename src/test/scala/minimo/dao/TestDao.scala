@@ -19,4 +19,11 @@ class TestDao {
     println("result User: " + rst)
   }
 
+  @Test
+  def addUserInRoom: Unit = {
+    val rst = RoomDao.addUserInRoom(new ObjectId("5a16f7ce77c8a2b22406fb81"), new ObjectId("5a16f7ce77c8a2b22406fb86"))
+
+    println("rst - " + rst)
+  }
+
 }

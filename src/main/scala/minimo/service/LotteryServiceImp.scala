@@ -4,8 +4,6 @@ import minimo.dao.{ObjectId, RoomDao}
 import minimo.service.api.LotteryService
 import minimo.service.api.Model.Room
 
-import scala.collection.mutable
-
 /**
   *
   */
@@ -18,10 +16,10 @@ class LotteryServiceImp extends LotteryService {
     RoomDao.getRoom(roomId) match {
       case None => false
       case Some(room) =>
-        if (room.users.size == ServiceConfig.MAX_USERS_LIMIT) {
+        if (room.usersId.size == ServiceConfig.MAX_USERS_LIMIT) {
           false
         } else {
-          RoomDao.addUserInRoom(userId)
+          RoomDao.addUserInRoom(userId, roomId)
           true
         }
     }

@@ -6,29 +6,33 @@ package minimo.dao
 object RoomDao {
   import ctx._
 
-  case class Room(oid: ObjectId, owner: String, users: List[ObjectId])
+  case class Rooms(oid: ObjectId, ownerId: String, usersId: List[ObjectId])
 
-  def listRooms: List[Room] = {
+  def listRooms: List[Rooms] = {
     val q = quote {
-      query[Room]
+      query[Rooms]
     }
     run(q)
   }
 
-  def getRoom(roomId: ObjectId): Option[Room] = {
+  def getRoom(roomId: ObjectId): Option[Rooms] = {
     val q = quote(
-      query[Room].filter(room => room.oid == lift(roomId))
+      query[Rooms].filter(room => room.oid == lift(roomId))
     )
 
     run(q).headOption
   }
 
-  def addUserInRoom(userId: ObjectId): Unit = {
-    val q = quote(
-      query[Room].update(room => room.users -> {userId :: room.users distinct})
-    )
+  def addUserInRoom(userId: ObjectId, roomId: ObjectId): Long = {
+    val uids: Seq[ObjectId] = Seq(userId)
+    val v = quote(infix"(select array_agg(distinct e) from unnest(users_id || ${lift(uids)}) e)".as[List[ObjectId]])
 
-    run(q)
+    val q = quote {
+      query[Rooms].filter(_.oid == lift(roomId))
+        .update(_.usersId -> unquote(v))
+    }
+
+    ctx.run(q)
   }
 
 }
