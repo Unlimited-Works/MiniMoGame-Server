@@ -9,7 +9,7 @@ import rxsocket.session.ServerEntrance
   * Json presentation Example
   */
 object JProtoServer extends App{
-  val socket = new ServerEntrance("127.0.0.1", 10011).listen
+  val socket = new ServerEntrance("127.0.0.1", 10012).listen
 
   val jprotoSocket = socket.map(connection => new JProtocol(connection, connection.startReading))
 

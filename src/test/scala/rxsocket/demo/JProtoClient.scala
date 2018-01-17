@@ -14,7 +14,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
   */
 object JProtoClient extends App {
   private val logger = LoggerFactory.getLogger(getClass)
-  val client = new ClientEntrance("localhost", 10011).connect
+  val client = new ClientEntrance("localhost", 10012).connect
   val jproto = client.map { x => new JProtocol(x, x.startReading) }
 
   val namesFur = getMyNames("admin")

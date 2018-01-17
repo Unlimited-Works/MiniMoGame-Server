@@ -18,7 +18,7 @@ import scala.concurrent.duration.Duration
 import rxsocket.`implicit`.ObvsevableImplicit._
 
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.control.NonFatal
 
@@ -38,50 +38,67 @@ class JProtocol(val connectedSocket: ConnectedSocket, read: Observable[Completed
     */
   val jRead: Observable[JValue] = {
     read.map{cp =>
-        if(cp.uuid == 1.toByte) {
-          val load = cp.loaded.array.string
-          logger.debug(s"$load", 46, Some("proto-json"))
-          Some(parse(load))
-        } else  None
-      }.filter(_.nonEmpty).map(_.get)
+      if(cp.uuid == 1.toByte) {
+        val load = cp.loaded.array.string
+        logger.debug(s"$load", 46, Some("proto-json"))
+        Some(parse(load))
+      } else  None
+    }.filter(_.nonEmpty).map(_.get)
   }
 
   /**
+    * two module support:
+    * 1. has type field:
     * this subscription distinct different JProtocols with type field.
     * type == once: response message only once
     * type == stream: response message multi-times.
     *
+    * 2. not type field
+    * use simple dispatch mode
+    *
+    * TODO: this place should be scalable.
     */
   jRead.subscribe{jsonRsp =>
     try{
+      logger.info(s"jRead get msg: ${compact(render(jsonRsp))}")
+
       val JString(taskId) = jsonRsp \ "taskId"
-      val JString(typ) = jsonRsp \ "type"
-      typ match {
-        case "once" =>
-          val load = jsonRsp \ "load"
+      jsonRsp \ "type" match {
+        case JNothing =>
           val subj = this.getTask(taskId)
-          subj.foreach{ sub =>
-            logger.debug("read jprotocol - {}", compact(render(jsonRsp)))
-            sub.onNext(load)
+          subj.foreach{
+            _.onNext(jsonRsp)
           }
-          removeTask(taskId)
-        case "stream" =>
-          val load = jsonRsp \ "load"
-          val JBool(isCompleted) = jsonRsp \ "isCompleted"
-          val subj = this.getTask(taskId)
-          subj.foreach{ sub =>
-            logger.debug(s"${compact(render(jsonRsp))}")
-            sub.onNext(load)
+        case JString(typ) =>
+          typ match {
+            case "once" =>
+              val load = jsonRsp \ "load"
+              val subj = this.getTask(taskId)
+              subj.foreach{ sub =>
+                sub.onNext(load)
+              }
+              removeTask(taskId)
+            case "stream" =>
+              val load = jsonRsp \ "load"
+              val JBool(isCompleted) = jsonRsp \ "isCompleted"
+              val subj = this.getTask(taskId)
+              subj.foreach{ sub =>
+                sub.onNext(load)
+              }
+              if(isCompleted) removeTask(taskId)
+            case otherTyp =>
+              logger.debug(s"un known type $otherTyp in json result: ${compact(render(jsonRsp))}")
           }
-          if(isCompleted) removeTask(taskId)
       }
 
-
-      logger.debug(s"${compact(render(jsonRsp))}")
     } catch {
-      case NonFatal(e)=> Unit
+      case NonFatal(e)=>
+        logger.warn(s"jread fail: ${compact(render(jsonRsp))} - ", e)
+        Unit
     }
   }
+
+
 
   def send(any: Any) = {
     val bytes = JsonParse.enCode(any)
