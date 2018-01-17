@@ -60,7 +60,7 @@ class JProtocol(val connectedSocket: ConnectedSocket, read: Observable[Completed
     */
   jRead.subscribe{jsonRsp =>
     try{
-      logger.info(s"jRead get msg: ${compact(render(jsonRsp))}")
+      logger.debug(s"jRead get msg: ${compact(render(jsonRsp))}")
 
       val JString(taskId) = jsonRsp \ "taskId"
       jsonRsp \ "type" match {
