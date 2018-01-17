@@ -87,7 +87,7 @@ class JProtocol(val connectedSocket: ConnectedSocket, read: Observable[Completed
               }
               if(isCompleted) removeTask(taskId)
             case otherTyp =>
-              logger.debug(s"un known type $otherTyp in json result: ${compact(render(jsonRsp))}")
+              logger.warn(s"un known type $otherTyp in json result: ${compact(render(jsonRsp))}")
           }
       }
 
