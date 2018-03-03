@@ -1,13 +1,13 @@
 package rxsocket.demo
 
 import org.slf4j.LoggerFactory
-import rxsocket._
-import rxsocket.presentation.json.{IdentityTask, JProtocol}
-import rxsocket.session.ClientEntrance
-import rx.lang.scala.Observable
+import lorance.rxsocket.presentation.json.JProtocol
+import lorance.rxsocket.session.ClientEntrance
+import monix.execution.Ack.Continue
+import monix.reactive.Observable
 
 import scala.concurrent.{Future, Promise}
-import scala.concurrent.ExecutionContext.Implicits.global
+import monix.execution.Scheduler.Implicits.global
 
 /**
   * Json presentation Example
@@ -49,6 +49,7 @@ object JProtoClient extends App {
     observable.subscribe(
       s => {
         lst.synchronized(lst.+=(s))
+        Continue
       },
       e =>
         p.tryFailure(e),

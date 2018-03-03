@@ -13,8 +13,8 @@ object Main extends App {
   MinimoConfig
 
   //forbid heart beat for simple
-  rxsocket.session.Configration.CHECK_HEART_BEAT_BREAKTIME = Int.MaxValue
-  rxsocket.session.Configration.SEND_HEART_BEAT_BREAKTIME = Int.MaxValue
+  lorance.rxsocket.session.Configration.CHECK_HEART_BEAT_BREAKTIME = Int.MaxValue
+  lorance.rxsocket.session.Configration.SEND_HEART_BEAT_BREAKTIME = Int.MaxValue
 
   //start network server
   logger.info(s"starting network at: ${MinimoConfig.network}")

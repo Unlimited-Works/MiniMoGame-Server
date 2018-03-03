@@ -4,7 +4,7 @@ import org.json4s.DefaultFormats
 import org.json4s.JsonAST._
 import org.json4s.JsonDSL._
 import org.slf4j.LoggerFactory
-import rxsocket.presentation.json.{EmptyEndPoint, EndPoint, RawEndPoint, Router}
+import lorance.rxsocket.presentation.json.{EmptyEndPoint, EndPoint, RawEndPoint, Router}
 
 import scala.util.Success
 import minimo.service

@@ -2,9 +2,9 @@ package minimo
 
 
 import org.slf4j.LoggerFactory
-import rx.lang.scala.Observable
-import rxsocket.presentation.json._
-import rxsocket.session.ServerEntrance
+import lorance.rxsocket.presentation.json._
+import lorance.rxsocket.session.ServerEntrance
+import monix.reactive.Observable
 
 /**
   *

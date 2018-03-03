@@ -2,8 +2,10 @@ package rxsocket.demo
 
 import org.json4s.JsonAST.JString
 import org.json4s.native.JsonMethods._
-import rxsocket.presentation.json.{IdentityTask, JProtocol}
-import rxsocket.session.ServerEntrance
+import lorance.rxsocket.presentation.json.{IdentityTask, JProtocol}
+import lorance.rxsocket.session.ServerEntrance
+import monix.execution.Ack.Continue
+import monix.execution.Scheduler.Implicits.global
 
 /**
   * Json presentation Example
@@ -15,7 +17,7 @@ object JProtoServer extends App{
 
   case class Response(result: Option[String], taskId: String) extends IdentityTask
 
-  jprotoSocket.subscribe ( s =>
+  jprotoSocket.subscribe { s =>
     s.jRead.subscribe{ j =>
       println(s"GET_INFO - ${compact(render(j))}")
       val JString(tskId) = j \ "taskId" //assume has taskId for simplify
@@ -23,8 +25,10 @@ object JProtoServer extends App{
       s.send(Response(Some("foo"), tskId))
       s.send(Response(Some("boo"), tskId))
       s.send(Response(None, tskId))
+      Continue
     }
-  )
+    Continue
+  }
 
   Thread.currentThread().join()
 }
