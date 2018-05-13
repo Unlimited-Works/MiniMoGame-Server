@@ -1,23 +1,22 @@
 package minimo
 
 
-import org.slf4j.LoggerFactory
+import org.slf4j.{Logger, LoggerFactory}
 import lorance.rxsocket.presentation.json._
-import lorance.rxsocket.session.ServerEntrance
+import lorance.rxsocket.session.{ConnectedSocket, ServerEntrance}
 import monix.reactive.Observable
 
 /**
   *
   */
 class Network(host: String, port: Int, routes: List[Router]) {
-  val logger = LoggerFactory.getLogger(getClass)
+  protected val logger = LoggerFactory.getLogger(getClass)
   //socket init
-  val conntected = new ServerEntrance(host, port).listen
-  val readX = conntected.map(c => (c, c.startReading))
+  val conntected: Observable[ConnectedSocket] = new ServerEntrance(host, port).listen
 
-  val readerJProt: Observable[JProtocol] = readX.map(cx => new JProtocol(cx._1, cx._2))
+  val readerJProt: Observable[JProtocol] = conntected.map(cx => new JProtocol(cx, cx.startReading))
 
   //register service
-  val jProtoServer = new JProtoServer(readerJProt, routes)
+  val jProtoServer: JProtoServer = new JProtoServer(readerJProt, routes)
 
 }
