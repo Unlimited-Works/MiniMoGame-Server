@@ -2,7 +2,7 @@ package rxsocket.demo
 
 import org.slf4j.LoggerFactory
 import lorance.rxsocket.presentation.json.JProtocol
-import lorance.rxsocket.session.ClientEntrance
+import lorance.rxsocket.session.{ClientEntrance, CommPassiveParser}
 import monix.execution.Ack.Continue
 import monix.reactive.Observable
 
@@ -14,7 +14,7 @@ import monix.execution.Scheduler.Implicits.global
   */
 object JProtoClient extends App {
   private val logger = LoggerFactory.getLogger(getClass)
-  val client = new ClientEntrance("localhost", 10012).connect
+  val client = new ClientEntrance("localhost", 10012, new CommPassiveParser()).connect
   val jproto = client.map { x => new JProtocol(x, x.startReading) }
 
   val namesFur = getMyNames("admin")

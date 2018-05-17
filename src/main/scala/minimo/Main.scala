@@ -1,5 +1,6 @@
 package minimo
 
+import minimo.network.Network
 import org.slf4j.LoggerFactory
 import route.{LoginRouter, RoomRouter}
 

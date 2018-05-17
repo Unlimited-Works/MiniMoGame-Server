@@ -2,8 +2,8 @@ package rxsocket.demo
 
 import org.json4s.JsonAST.JString
 import org.json4s.native.JsonMethods._
-import lorance.rxsocket.presentation.json.{IdentityTask, JProtocol}
-import lorance.rxsocket.session.ServerEntrance
+import lorance.rxsocket.presentation.json.JProtocol
+import lorance.rxsocket.session.{CommPassiveParser, ServerEntrance}
 import monix.execution.Ack.Continue
 import monix.execution.Scheduler.Implicits.global
 
@@ -11,20 +11,20 @@ import monix.execution.Scheduler.Implicits.global
   * Json presentation Example
   */
 object JProtoServer extends App{
-  val socket = new ServerEntrance("127.0.0.1", 10012).listen
+  val socket = new ServerEntrance("127.0.0.1", 10012, new CommPassiveParser()).listen
 
   val jprotoSocket = socket.map(connection => new JProtocol(connection, connection.startReading))
 
-  case class Response(result: Option[String], taskId: String) extends IdentityTask
+  case class Response(result: Option[String])
 
   jprotoSocket.subscribe { s =>
     s.jRead.subscribe{ j =>
       println(s"GET_INFO - ${compact(render(j))}")
       val JString(tskId) = j \ "taskId" //assume has taskId for simplify
       //send multiple msg with same taskId as a stream
-      s.send(Response(Some("foo"), tskId))
-      s.send(Response(Some("boo"), tskId))
-      s.send(Response(None, tskId))
+      s.send(Response(Some("foo")), tskId)
+      s.send(Response(Some("boo")), tskId)
+      s.send(Response(None), tskId)
       Continue
     }
     Continue
