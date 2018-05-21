@@ -18,7 +18,7 @@ object Main extends App {
 //  lorance.rxsocket.session.Configration.SEND_HEART_BEAT_BREAKTIME = Int.MaxValue
   val sceneRouter = new SceneRouter()
 
-  val routes = Map(
+  val jroutes = Map(
     "login" -> new LoginRouter,
     "room" -> new RoomRouter,
     "scene" -> sceneRouter,
@@ -36,15 +36,10 @@ object Main extends App {
     MinimoConfig.network.host,
     MinimoConfig.network.port,
     MinimoConfig.network.syncPort,
-    routes,
+    jroutes,
     syncRouters
   )
 
-//  new PositionServer(
-//    MinimoConfig.network.host,
-//    MinimoConfig.network.port,
-//    routes
-//  )
 
   Thread.currentThread().join()
 }
