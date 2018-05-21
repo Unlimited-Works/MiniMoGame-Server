@@ -1,5 +1,7 @@
 package minimo
 
+import lorance.rxsocket.session.{CompletedProto, ConnectedSocket}
+import minimo.network.SyncProto
 import minimo.service.api.UserService
 
 /**
@@ -7,5 +9,10 @@ import minimo.service.api.UserService
   */
 package object service {
   implicit val userService: UserService = new UserServiceImp
+
+  case class ServiceContext(
+                             ayncSocket: ConnectedSocket[SyncProto],
+                             jsonSocket: ConnectedSocket[CompletedProto]
+  )
 
 }

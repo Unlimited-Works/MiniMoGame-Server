@@ -1,8 +1,8 @@
 package minimo
 
-import minimo.network.Network
+import minimo.network.{Network, PositionProto, SyncProto}
 import org.slf4j.LoggerFactory
-import route.{LoginRouter, RoomRouter}
+import route.{LoginRouter, RoomRouter, SceneRouter}
 
 /**
   *
@@ -16,9 +16,17 @@ object Main extends App {
   //forbid heart beat for simple
 //  lorance.rxsocket.session.Configration.CHECK_HEART_BEAT_BREAKTIME = Int.MaxValue
 //  lorance.rxsocket.session.Configration.SEND_HEART_BEAT_BREAKTIME = Int.MaxValue
-  val routes = List(
-    new LoginRouter,
-    new RoomRouter,
+  val sceneRouter = new SceneRouter()
+
+  val routes = Map(
+    "login" -> new LoginRouter,
+    "room" -> new RoomRouter,
+    "scene" -> sceneRouter,
+
+  )
+
+  val syncRouters: Map[SyncProto, SceneRouter] = Map(
+    PositionProto.unit -> sceneRouter,
 
   )
 
@@ -27,7 +35,16 @@ object Main extends App {
   new Network(
     MinimoConfig.network.host,
     MinimoConfig.network.port,
-    routes)
+    MinimoConfig.network.syncPort,
+    routes,
+    syncRouters
+  )
+
+//  new PositionServer(
+//    MinimoConfig.network.host,
+//    MinimoConfig.network.port,
+//    routes
+//  )
 
   Thread.currentThread().join()
 }

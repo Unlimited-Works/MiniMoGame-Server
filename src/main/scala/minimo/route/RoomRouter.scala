@@ -1,14 +1,14 @@
 package minimo.route
 
-import lorance.rxsocket.presentation.json.{EndPoint, Router}
+import lorance.rxsocket.presentation.json.{EndPoint, JRouter}
 import org.json4s.JsonAST
 import org.json4s.JsonAST.JString
 
 /**
   *
   */
-class RoomRouter extends Router {
-  override val path: String = "room"
+class RoomRouter extends JRouter {
+//  override val path: String = "room"
 
   override def apply(reqJson: JsonAST.JValue): EndPoint = {
     val JString(protoId) = reqJson \ "protoId"

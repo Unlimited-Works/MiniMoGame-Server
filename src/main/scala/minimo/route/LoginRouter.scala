@@ -4,7 +4,7 @@ import org.json4s.DefaultFormats
 import org.json4s.JsonAST._
 import org.json4s.JsonDSL._
 import org.slf4j.LoggerFactory
-import lorance.rxsocket.presentation.json.{EmptyEndPoint, EndPoint, RawEndPoint, Router}
+import lorance.rxsocket.presentation.json.{EmptyEndPoint, EndPoint, JRouter, RawEndPoint}
 
 import scala.util.Success
 import minimo.service
@@ -13,13 +13,13 @@ import minimo.service.api.UserService
 /**
   *
   */
-class LoginRouter extends Router {
+class LoginRouter extends JRouter {
   private val logger = LoggerFactory.getLogger(getClass)
   implicit val formats: DefaultFormats.type = DefaultFormats
 
   val userSerivce: UserService = service.userService
 
-  override val path = "login"
+//  override val path = "login"
 
   override def apply(reqJson: JValue): EndPoint = {
     logger.debug("get_json:" + reqJson)

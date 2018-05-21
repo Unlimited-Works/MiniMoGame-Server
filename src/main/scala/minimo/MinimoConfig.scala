@@ -27,7 +27,11 @@ object MinimoConfig {
 
   val network: Network = {
     val nconfig = combinedConfig.getConfig("minimo.network")
-    Network(nconfig.getString("host"), nconfig.getInt("port"))
+    Network(
+      nconfig.getString("host"),
+      nconfig.getInt("port"),
+      nconfig.getInt("syncPort")
+    )
   }
 
   def confInfo(config: Config, info: String = ""): String = info + ": " + config.root().render(ConfigRenderOptions.concise().setFormatted(true).setJson(true))
@@ -35,5 +39,5 @@ object MinimoConfig {
   logger.info(confInfo(MinimoConfig.myConfig, "my_config"))
   logger.debug(confInfo(MinimoConfig.combinedConfig, "combined_config"))
 
-  case class Network(host: String, port: Int)
+  case class Network(host: String, port: Int, syncPort: Int)
 }

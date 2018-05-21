@@ -12,5 +12,5 @@ libraryDependencies ++= Seq(
   "io.getquill" %% "quill-jdbc" % "2.4.2",
   "junit" % "junit" % "4.12" % Test,
 
-  "com.scalachan" %% "rxsocket" % "0.13.0",
+  "com.scalachan" %% "rxsocket" % "0.13.1-SNAPSHOT" changing(),
 )

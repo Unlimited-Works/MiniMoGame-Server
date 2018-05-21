@@ -49,8 +49,7 @@ class SyncParser(handlers: Map[Short, SyncProtoHandler]) extends PassiveParser[S
 
 }
 
-abstract class SyncProtoHandler( val protoId: Short,
-                                 val initSymbol: Symbol,
+abstract class SyncProtoHandler( val initSymbol: Symbol,
                                  val initLength: Int
                                ) {
 
@@ -59,7 +58,7 @@ abstract class SyncProtoHandler( val protoId: Short,
 }
 
 
-class PositionSyncHandler() extends SyncProtoHandler(1, 'positionInit,12) {
+class PositionSyncHandler() extends SyncProtoHandler('positionInit,12) {
 
   override def parse(symbol: Symbol, length: Int, proto: Array[Byte]): (Symbol, Int, Option[SyncProto]) = {
     (symbol, length) match {
@@ -77,3 +76,6 @@ class PositionSyncHandler() extends SyncProtoHandler(1, 'positionInit,12) {
 
 abstract class SyncProto
 case class PositionProto(x: Float, y: Float, z: Float) extends SyncProto
+object PositionProto {
+  def unit = PositionProto(0, 0, 0)
+}
