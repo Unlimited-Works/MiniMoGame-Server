@@ -2,7 +2,7 @@ package rxsocket.demo
 
 import java.nio.ByteBuffer
 
-import lorance.rxsocket.session._
+import minimo.rxsocket.session._
 import monix.execution.Ack.Continue
 import monix.reactive.Observable
 import monix.execution.Scheduler.Implicits.global

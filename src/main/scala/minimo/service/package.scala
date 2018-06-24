@@ -1,6 +1,6 @@
 package minimo
 
-import lorance.rxsocket.session.{CompletedProto, ConnectedSocket}
+import minimo.rxsocket.session.{CompletedProto, ConnectedSocket}
 import minimo.network.SyncProto
 import minimo.service.api.UserService
 

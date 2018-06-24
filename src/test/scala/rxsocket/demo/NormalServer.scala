@@ -2,8 +2,8 @@ package rxsocket.demo
 
 import java.nio.ByteBuffer
 
-import lorance.rxsocket._
-import lorance.rxsocket.session.{CommPassiveParser, CompletedProto, ConnectedSocket, ServerEntrance}
+import minimo.rxsocket._
+import minimo.rxsocket.session.{CommPassiveParser, CompletedProto, ConnectedSocket, ServerEntrance}
 import monix.execution.Ack.Continue
 import monix.reactive.Observable
 import monix.execution.Scheduler.Implicits.global

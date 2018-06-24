@@ -1,14 +1,14 @@
 package minimo.network
 
-import lorance.rxsocket.presentation.json._
-import lorance.rxsocket.session.{CommPassiveParser, CompletedProto, ConnectedSocket, ServerEntrance}
+import minimo.rxsocket.presentation.json._
+import minimo.rxsocket.session.{CommPassiveParser, CompletedProto, ConnectedSocket, ServerEntrance}
 import monix.reactive.Observable
 import org.slf4j.LoggerFactory
 
 /**
   * all services start at here
   */
-class Network(host: String, port: Int, syncPort: Int, routes: Map[String, JRouter], syncRouters: Map[SyncProto, SyncRouter]) {
+class Network(host: String, port: Int, syncPort: Int, routes: List[JRouter], syncRouters: Map[SyncProto, SyncRouter]) {
   protected val logger = LoggerFactory.getLogger(getClass)
   //socket init
   val conntected: Observable[ConnectedSocket[CompletedProto]] = new ServerEntrance(host, port, new CommPassiveParser()).listen

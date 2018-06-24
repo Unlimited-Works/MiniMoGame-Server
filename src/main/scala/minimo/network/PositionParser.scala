@@ -2,7 +2,7 @@ package minimo.network
 
 import java.nio.ByteBuffer
 
-import lorance.rxsocket.session.PassiveParser
+import minimo.rxsocket.session.PassiveParser
 
 /**
   * sync protocol such as position, attack which should be quickly to handled and
@@ -74,8 +74,13 @@ class PositionSyncHandler() extends SyncProtoHandler('positionInit,12) {
 
 }
 
-abstract class SyncProto
-case class PositionProto(x: Float, y: Float, z: Float) extends SyncProto
+abstract class SyncProto {
+  val unit: SyncProto
+}
+
+case class PositionProto(x: Float, y: Float, z: Float) extends SyncProto {
+  override val unit: SyncProto = PositionProto.unit
+}
 object PositionProto {
-  def unit = PositionProto(0, 0, 0)
+  val unit: PositionProto = PositionProto(0, 0, 0)
 }

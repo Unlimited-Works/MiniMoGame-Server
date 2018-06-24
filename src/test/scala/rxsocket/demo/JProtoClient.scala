@@ -1,8 +1,8 @@
 package rxsocket.demo
 
 import org.slf4j.LoggerFactory
-import lorance.rxsocket.presentation.json.JProtocol
-import lorance.rxsocket.session.{ClientEntrance, CommPassiveParser}
+import minimo.rxsocket.presentation.json.JProtocol
+import minimo.rxsocket.session.{ClientEntrance, CommPassiveParser}
 import monix.execution.Ack.Continue
 import monix.reactive.Observable
 

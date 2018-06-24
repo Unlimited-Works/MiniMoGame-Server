@@ -1,6 +1,6 @@
 package minimo.network
 
-import lorance.rxsocket.session.ConnectedSocket
+import minimo.rxsocket.session.ConnectedSocket
 import scala.concurrent.Future
 
 /**
@@ -13,18 +13,15 @@ trait SyncRouter {
 //    SyncRouter.routes += (syncProto -> this)
 //  }
 
-  def syncFn(data: SyncProto)(implicit syncSktContext: ConnectedSocket[SyncProto]): Future[Unit]
+  def syncFn(data: SyncProto): Future[Unit]
 
 }
 
-class SyncRouterManager {
-  val routes = collection.mutable.HashMap[SyncProto, SyncRouter]()
-
-  def dispatch(load: SyncProto)(implicit syncSktContext: ConnectedSocket[SyncProto]): Future[Unit] = {
-    load match {
-      case pos: PositionProto =>
-        routes(pos).syncFn(load)
-    }
+class SyncRouterManager(routes: Map[SyncProto, SyncRouter]) {
+//  val routes = ()
+//  import SyncProtoUnitImp._
+  def dispatch(load: SyncProto): Future[Unit] = {
+    routes(load.unit).syncFn(load)
   }
 }
 

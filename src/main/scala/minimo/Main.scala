@@ -14,14 +14,14 @@ object Main extends App {
   MinimoConfig
 
   //forbid heart beat for simple
-//  lorance.rxsocket.session.Configration.CHECK_HEART_BEAT_BREAKTIME = Int.MaxValue
-//  lorance.rxsocket.session.Configration.SEND_HEART_BEAT_BREAKTIME = Int.MaxValue
+//  minimo.rxsocket.session.Configration.CHECK_HEART_BEAT_BREAKTIME = Int.MaxValue
+//  minimo.rxsocket.session.Configration.SEND_HEART_BEAT_BREAKTIME = Int.MaxValue
   val sceneRouter = new SceneRouter()
 
-  val jroutes = Map(
-    "login" -> new LoginRouter,
-    "room" -> new RoomRouter,
-    "scene" -> sceneRouter,
+  val jroutes = List(
+    new LoginRouter,
+    new RoomRouter,
+    sceneRouter,
 
   )
 
@@ -42,4 +42,5 @@ object Main extends App {
 
 
   Thread.currentThread().join()
+
 }

@@ -2,8 +2,8 @@ package rxsocket.demo
 
 import org.json4s.JsonAST.JString
 import org.json4s.native.JsonMethods._
-import lorance.rxsocket.presentation.json.JProtocol
-import lorance.rxsocket.session.{CommPassiveParser, ServerEntrance}
+import minimo.rxsocket.presentation.json.JProtocol
+import minimo.rxsocket.session.{CommPassiveParser, ServerEntrance}
 import monix.execution.Ack.Continue
 import monix.execution.Scheduler.Implicits.global
 

@@ -4,7 +4,7 @@ import org.json4s.DefaultFormats
 import org.json4s.JsonAST._
 import org.json4s.JsonDSL._
 import org.slf4j.LoggerFactory
-import lorance.rxsocket.presentation.json.{EmptyEndPoint, EndPoint, JRouter, RawEndPoint}
+import minimo.rxsocket.presentation.json.{EmptyEndPoint, EndPoint, JRouter, RawEndPoint}
 
 import scala.util.Success
 import minimo.service
@@ -19,14 +19,14 @@ class LoginRouter extends JRouter {
 
   val userSerivce: UserService = service.userService
 
-//  override val path = "login"
+  override val jsonPath = "login"
 
-  override def apply(reqJson: JValue): EndPoint = {
+  override def jsonRoute(protoId: String, reqJson: JValue): EndPoint = {
     logger.debug("get_json:" + reqJson)
-    val JString(protoId) = reqJson \ "protoId"
+
     protoId match {
       case LOGIN_PROTO =>
-        val LoginOrRegReq(username, password) = (reqJson \ "load").extract[LoginOrRegReq]
+        val LoginOrRegReq(username, password) = reqJson.extract[LoginOrRegReq]
 
         //do database search
         val jsonRsp: JValue = {
@@ -39,7 +39,7 @@ class LoginRouter extends JRouter {
 
         RawEndPoint(Success(jsonRsp))
       case REGISTER_PROTO =>
-        val LoginOrRegReq(username, password) = (reqJson \ "load").extract[LoginOrRegReq]
+        val LoginOrRegReq(username, password) = reqJson.extract[LoginOrRegReq]
 
         //do database search
         val jsonRsp: JValue = {
