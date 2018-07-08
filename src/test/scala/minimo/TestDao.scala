@@ -1,4 +1,4 @@
-package minimo.dao
+package minimo
 
 import org.junit.Test
 

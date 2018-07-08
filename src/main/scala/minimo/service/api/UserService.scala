@@ -1,6 +1,6 @@
 package minimo.service.api
 
-import minimo.dao.ObjectId
+import minimo.util.ObjectId
 
 /**
   * user relative api

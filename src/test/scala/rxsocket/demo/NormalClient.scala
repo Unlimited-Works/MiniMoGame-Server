@@ -12,7 +12,7 @@ import monix.execution.Scheduler.Implicits.global
   */
 object NormalClient extends App{
 
-  val client = new ClientEntrance("localhost", 10002, new CommPassiveParser())
+  val client = new ClientEntrance("localhost", 10002, () => new CommPassiveParser())
   val socket = client.connect
 
   val reading = Observable.fromFuture(socket).flatMap(_.startReading)

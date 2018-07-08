@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory
 class Network(host: String, port: Int, syncPort: Int, routes: List[JRouter], syncRouters: Map[SyncProto, SyncRouter]) {
   protected val logger = LoggerFactory.getLogger(getClass)
   //socket init
-  val conntected: Observable[ConnectedSocket[CompletedProto]] = new ServerEntrance(host, port, new CommPassiveParser()).listen
+  val conntected: Observable[ConnectedSocket[CompletedProto]] = new ServerEntrance(host, port, () => new CommPassiveParser()).listen
 
   val readerJProt: Observable[JProtocol] = conntected.map(cx => new JProtocol(cx, cx.startReading))
 

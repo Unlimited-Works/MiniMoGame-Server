@@ -1,8 +1,10 @@
 package minimo.service
 
-import minimo.dao.{ObjectId, RoomDao}
+//import minimo.dao.RoomDao
+import minimo.dao.RoomDao
 import minimo.service.api.LotteryService
 import minimo.service.api.Model.Room
+import minimo.util.ObjectId
 
 /**
   *

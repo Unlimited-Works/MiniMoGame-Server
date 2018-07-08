@@ -1,4 +1,4 @@
-package minimo.dao;
+package minimo.util;
 
 /**
  *      Copyright (C) 2008 10gen Inc.

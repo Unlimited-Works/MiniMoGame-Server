@@ -43,8 +43,8 @@ package object execution {
 //    ExecutionContext.fromExecutor(Executors.newWorkStealingPool(cpus * 2))
 //  }
 
-//  private[session] lazy val waitExecutor: ExecutionContextExecutor = {
-//    val cpus = Runtime.getRuntime.availableProcessors
-//    ExecutionContext.fromExecutor(Executors.newWorkStealingPool(cpus * 2))
-//  }
+  private[session] lazy val waitExecutor: ExecutionContextExecutor = {
+    val cpus = Runtime.getRuntime.availableProcessors
+    ExecutionContext.fromExecutor(Executors.newWorkStealingPool(cpus))
+  }
 }

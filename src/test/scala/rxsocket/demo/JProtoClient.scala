@@ -14,7 +14,7 @@ import monix.execution.Scheduler.Implicits.global
   */
 object JProtoClient extends App {
   private val logger = LoggerFactory.getLogger(getClass)
-  val client = new ClientEntrance("localhost", 10012, new CommPassiveParser()).connect
+  val client = new ClientEntrance("localhost", 10012, () => new CommPassiveParser()).connect
   val jproto = client.map { x => new JProtocol(x, x.startReading) }
 
   val namesFur = getMyNames("admin")

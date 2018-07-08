@@ -16,7 +16,7 @@ class SyncServer(host: String, port: Int, routers: Map[SyncProto, SyncRouter]) {
   val pos = new PositionSyncHandler()
   val syncParsers = Map(1.toShort -> pos)
   val syncServer: Observable[(ConnectedSocket[SyncProto], Observable[SyncProto])] =
-    new ServerEntrance(host, port, new SyncParser(syncParsers))
+    new ServerEntrance(host, port, () => new SyncParser(syncParsers))
       .listen
       .map(skt => skt -> skt.startReading)
 

@@ -1,6 +1,7 @@
 package minimo
 
 import io.getquill._
+import minimo.util.ObjectId
 
 /**
   *

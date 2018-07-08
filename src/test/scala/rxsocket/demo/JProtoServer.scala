@@ -11,7 +11,7 @@ import monix.execution.Scheduler.Implicits.global
   * Json presentation Example
   */
 object JProtoServer extends App{
-  val socket = new ServerEntrance("127.0.0.1", 10012, new CommPassiveParser()).listen
+  val socket = new ServerEntrance("127.0.0.1", 10012, () => new CommPassiveParser()).listen
 
   val jprotoSocket = socket.map(connection => new JProtocol(connection, connection.startReading))
 

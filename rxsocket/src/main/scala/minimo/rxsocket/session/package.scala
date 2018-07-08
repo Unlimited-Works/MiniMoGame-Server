@@ -1,11 +1,7 @@
 package minimo.rxsocket
 
 import java.nio.ByteBuffer
-
 import minimo.rxsocket.session.implicitpkg._
-import sun.util.locale.provider.NumberFormatProviderImpl
-
-import scala.concurrent.Future
 
 package object session {
   val EmptyByteBuffer = ByteBuffer.allocate(0)
@@ -24,12 +20,3 @@ package object session {
     (uuid, length, load)
   }
 }
-
-  object AA {
-    def sum[A: Numeric](list: List[A]): A = {
-      val ev = implicitly[Numeric[A]]
-      list.foldLeft(ev.zero)((sum, e) => ev.plus(sum, e))
-    }
-//    import Numeric._
-    val x  = sum(List(1,2,3))
-  }

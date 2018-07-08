@@ -3,13 +3,12 @@ package minimo.rxsocket.presentation.json
 import org.json4s.JsonAST.{JString, JValue}
 
 import scala.collection.mutable
-import scala.concurrent.Promise
 
 
 /**
   * router define how to deal with received data
   */
-trait JRouter {//extends (JValue => EndPoint)
+trait JRouter {
   val jsonPath: String
   def jsonRoute(protoId: String, load: JValue): EndPoint
 

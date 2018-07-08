@@ -1,6 +1,6 @@
 //package minimo.scene
 //
-//import minimo.dao.ObjectId
+//import ObjectId
 //
 //trait GameObject {
 //  val name: String

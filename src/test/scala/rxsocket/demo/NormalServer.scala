@@ -12,7 +12,7 @@ import monix.execution.Scheduler.Implicits.global
   * simplest Example
   */
 object NormalServer extends App{
-  val server = new ServerEntrance("localhost", 10002, new CommPassiveParser())
+  val server = new ServerEntrance("localhost", 10002, () => new CommPassiveParser())
   val socket: Observable[ConnectedSocket[CompletedProto]] = server.listen
 
   socket.subscribe(s => {

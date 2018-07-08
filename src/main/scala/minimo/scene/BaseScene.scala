@@ -3,7 +3,7 @@
 //import java.util.concurrent.ConcurrentHashMap
 //
 //import minimo.rxsocket.session.{CompletedProto, ConnectedSocket}
-//import minimo.dao.ObjectId
+//import ObjectId
 //
 ///**
 //  * 基本场景包含相关的这几个上下文数据：

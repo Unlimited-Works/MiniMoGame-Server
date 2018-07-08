@@ -1,6 +1,6 @@
 package minimo.dao
 
-
+import minimo.util.ObjectId
 
 /**
   *

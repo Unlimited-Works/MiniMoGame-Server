@@ -5,7 +5,6 @@ import java.nio.channels.{AsynchronousChannelGroup, AsynchronousServerSocketChan
 import java.util.concurrent.Executors
 
 import org.slf4j.LoggerFactory
-import minimo.rxsocket.dispatch.TaskManager
 import monix.reactive.Observable
 import monix.reactive.subjects.PublishSubject
 
@@ -13,7 +12,7 @@ import scala.concurrent.{Future, Promise}
 import scala.util.{Failure, Success}
 import monix.execution.Scheduler.Implicits.global
 
-class ServerEntrance[Proto](host: String, port: Int, parser: ProtoParser[Proto]) {
+class ServerEntrance[Proto](host: String, port: Int, genParser: () => ProtoParser[Proto]) {
   private val logger = LoggerFactory.getLogger(getClass)
 
   private val connectionSubs = PublishSubject[ConnectedSocket[Proto]]
@@ -30,6 +29,7 @@ class ServerEntrance[Proto](host: String, port: Int, parser: ProtoParser[Proto])
     prepared
   }
 
+  //todo: consider use pool for ton of socket
 //  private val heatBeatsManager = new TaskManager()
 
   /**
@@ -55,7 +55,7 @@ class ServerEntrance[Proto](host: String, port: Int, parser: ProtoParser[Proto])
 //            heatBeatsManager,
             AddressPair(c.getLocalAddress.asInstanceOf[InetSocketAddress], c.getRemoteAddress.asInstanceOf[InetSocketAddress]),
             true,
-            parser
+            genParser()
           )
           logger.info(s"client connected - ${connectedSocket.addressPair.remote}")
 
@@ -68,7 +68,7 @@ class ServerEntrance[Proto](host: String, port: Int, parser: ProtoParser[Proto])
   //          logger.trace(s"add heart beat to mananger - $sendHeartTask; $checkHeartTask")
 //          heatBeatsManager.addTask(checkHeartTask)
 
-          //??? connect setting back-pressure
+          //todo connect setting back-pressure
           connectionSubs.onNext(connectedSocket)
 
           val nextConn = connection(server)
@@ -94,7 +94,7 @@ class ServerEntrance[Proto](host: String, port: Int, parser: ProtoParser[Proto])
     // https://stackoverflow.com/questions/25665379/calling-java-generic-function-from-scala?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
     server.setOption[java.lang.Boolean](StandardSocketOptions.SO_REUSEADDR, true)
     // not support yet
-    //    server.setOption[java.lang.Integer](StandardSocketOptions.SO_LINGER, 3)
+//        server.setOption[java.lang.Integer](StandardSocketOptions.SO_LINGER, 3)
     //    server.setOption[java.lang.Boolean](StandardSocketOptions.SO_KEEPALIVE, true)
     server.accept(server, callback)
     p.future

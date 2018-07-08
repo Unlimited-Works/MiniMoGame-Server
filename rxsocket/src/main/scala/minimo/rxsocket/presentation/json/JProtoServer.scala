@@ -3,7 +3,7 @@ package minimo.rxsocket.presentation.json
 import monix.execution.Ack
 import monix.execution.Ack.Continue
 import monix.reactive.Observable
-import org.slf4j.LoggerFactory
+import org.slf4j.{Logger, LoggerFactory}
 import org.json4s.JsonAST.JValue
 import org.json4s.JsonDSL._
 
@@ -13,12 +13,11 @@ import monix.execution.Scheduler.Implicits.global
 import scala.concurrent.{Future, Promise}
 
 class JProtoServer(jProtos: Observable[JProtocol], routes: List[JRouter]) {
-  protected val logger = LoggerFactory.getLogger(getClass)
+  protected val logger: Logger = LoggerFactory.getLogger(getClass)
 
   val jRouterManager = new JRouterManager()
 
-  private val routesMap = routes.map(x => x.jsonPath -> x)
-  jRouterManager.routes ++= routesMap
+  jRouterManager.routes ++= routes.map(x => x.jsonPath -> x).toMap
 
   //handle streams
   jProtos.subscribe { skt =>

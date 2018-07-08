@@ -4,22 +4,18 @@ import java.net.{InetSocketAddress, SocketAddress}
 import java.nio.channels.{AsynchronousSocketChannel, CompletionHandler}
 
 import org.slf4j.LoggerFactory
-import minimo.rxsocket.dispatch.{TaskKey, TaskManager}
 import minimo.rxsocket.session.implicitpkg._
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}
 
 /**
   *
   */
-class ClientEntrance[Proto](remoteHost: String, remotePort: Int, parser: ProtoParser[Proto]) {
+class ClientEntrance[Proto](remoteHost: String, remotePort: Int, genParser: () => ProtoParser[Proto]) {
   private val logger = LoggerFactory.getLogger(getClass)
 
   val channel: AsynchronousSocketChannel = AsynchronousSocketChannel.open
   val serverAddr: SocketAddress = new InetSocketAddress(remoteHost, remotePort)
-
-//  private val heartBeatManager = new TaskManager()
 
   def connect: Future[ConnectedSocket[Proto]] = {
     val p = Promise[ConnectedSocket[Proto]]
@@ -31,7 +27,7 @@ class ClientEntrance[Proto](remoteHost: String, remotePort: Int, parser: ProtoPa
 //          heartBeatManager,
           AddressPair(channel.getLocalAddress.asInstanceOf[InetSocketAddress], channel.getRemoteAddress.asInstanceOf[InetSocketAddress]),
           false,
-          parser
+          genParser()
         )
 
 //        logger.info("add heart beat task")
@@ -51,11 +47,6 @@ class ClientEntrance[Proto](remoteHost: String, remotePort: Int, parser: ProtoPa
       }
     })
 
-    /**
-      * to test
-      * 目前没有合适的方式来测试超时异常是否能起作用
-      * 之前想到测试的方式是将服务端的端口绑定好ip地址,但不执行监听行为,但是就算这样,客户端依然认为是连接成功.
-      */
     p.future
      .withTimeout(Configration.CONNECT_TIME_LIMIT * 1000)
   }

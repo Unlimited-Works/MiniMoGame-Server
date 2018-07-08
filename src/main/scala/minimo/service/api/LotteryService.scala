@@ -1,7 +1,7 @@
 package minimo.service.api
 
-import minimo.dao.ObjectId
 import minimo.service.api.Model.Room
+import minimo.util.ObjectId
 
 /**
   *

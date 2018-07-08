@@ -6,7 +6,6 @@ import java.nio.channels.{AsynchronousSocketChannel, ClosedChannelException, Com
 import java.util.concurrent.{ConcurrentLinkedQueue, Semaphore}
 
 import org.slf4j.LoggerFactory
-import minimo.rxsocket.dispatch.TaskManager
 import minimo.rxsocket.session.exception.{ReadResultNegativeException, SocketClosedException}
 import minimo.rxsocket._
 import minimo.rxsocket.session.implicitpkg._
@@ -164,7 +163,8 @@ class ConnectedSocket[Proto](socketChannel: AsynchronousSocketChannel,
     if(socketClosed){
       Future.failed(SocketClosedException(closeReason))
     }else {
-      formerSendLock.synchronized {
+      Future (
+        formerSendLock.synchronized {
         // cancel wait
 //        formerSendTimeoutPromise.trySuccess(Unit)
 
@@ -223,8 +223,10 @@ class ConnectedSocket[Proto](socketChannel: AsynchronousSocketChannel,
 //        sendWithTimeout
         formerSendFur = curFur
         curFur
-      }
-    }
+      })(minimo.rxsocket.session.execution.waitExecutor)
+      }.flatten
+
+
   }
 
   private def read(readAttach: Attachment): Future[Attachment] = {
