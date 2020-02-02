@@ -1,19 +1,24 @@
 package minimo.route
 
+import minimo.exception.{BizCode, BizException}
+import minimo.network.jsonsocket.{EmptyEndPoint, EndPoint, JRouter, RawEndPoint}
+import minimo.network.jsession.MinimoSession
+import minimo.service
+import minimo.service.api.UserService
+import minimo.util.ObjectId
 import org.json4s.DefaultFormats
 import org.json4s.JsonAST._
 import org.json4s.JsonDSL._
 import org.slf4j.LoggerFactory
-import minimo.rxsocket.presentation.json.{EmptyEndPoint, EndPoint, JRouter, RawEndPoint}
 
-import scala.util.Success
-import minimo.service
-import minimo.service.api.UserService
+import scala.util.Try
 
 /**
   *
   */
 class LoginRouter extends JRouter {
+  import LoginRouter._
+
   private val logger = LoggerFactory.getLogger(getClass)
   implicit val formats: DefaultFormats.type = DefaultFormats
 
@@ -21,7 +26,7 @@ class LoginRouter extends JRouter {
 
   override val jsonPath = "login"
 
-  override def jsonRoute(protoId: String, reqJson: JValue): EndPoint = {
+  override def jsonRoute(protoId: String, reqJson: JValue)(implicit session: MinimoSession): EndPoint = {
     logger.debug("get_json:" + reqJson)
 
     protoId match {
@@ -29,15 +34,20 @@ class LoginRouter extends JRouter {
         val LoginOrRegReq(username, password) = reqJson.extract[LoginOrRegReq]
 
         //do database search
-        val jsonRsp: JValue = {
-          userSerivce.loginVerify(username, password) match {
-            case Some(oid) => true
-            case None => false
+        val jsonRsp: Try[JValue] = {
+          Try(userSerivce.loginVerify(username, password)).map {
+            case Some(oid) =>
+              LoginRouter.getCurrentUserInfo match {
+                case Some(_) => //让前一个用户强制退出
+                case None => ()
+              }
+              LoginRouter.setCurrentUserInfo(UserInfo(oid, username))
+              JString(oid.toString)
+            case None => JNull
           }
 
         }
-
-        RawEndPoint(Success(jsonRsp))
+        RawEndPoint(jsonRsp)
       case REGISTER_PROTO =>
         val LoginOrRegReq(username, password) = reqJson.extract[LoginOrRegReq]
 
@@ -56,7 +66,7 @@ class LoginRouter extends JRouter {
         }
 
         logger.debug(s"register_rsp: $jsonRsp")
-        RawEndPoint(Success(jsonRsp))
+        RawEndPoint(jsonRsp)
       case undefined =>
         logger.warn(s"undefined_protoId: $undefined")
         EmptyEndPoint
@@ -64,4 +74,39 @@ class LoginRouter extends JRouter {
   }
 }
 
-case class LoginOrRegReq(userName: String, password: String)
+object LoginRouter {
+  case class LoginOrRegReq(userName: String, password: String)
+  case class UserInfo(userId: ObjectId, userName: String)
+
+  def getCurrentUserInfo(implicit session: MinimoSession): Option[UserInfo] = {
+    session.getData(data => {
+      val userInfo = data.get("user_info")
+      userInfo.map(_.asInstanceOf[UserInfo])
+    })
+  }
+
+  def getCurrentUserInfoEx(implicit session: MinimoSession): UserInfo = {
+    getCurrentUserInfo match {
+      case None =>
+        throw BizException(BizCode.SYSTEM_ERROR, "用户信息无法从session获取")
+      case Some(rst) =>
+        rst
+    }
+  }
+
+  def setCurrentUserInfo(userInfo: UserInfo)(implicit session: MinimoSession): Boolean = {
+    var isUpdated = false
+    session.updateData(data => {
+      val formerValue = data.put("user_info", userInfo)
+      formerValue match {
+        case None =>
+          isUpdated = false
+        case Some(_) =>
+          isUpdated = true
+      }
+    })
+
+    isUpdated
+  }
+
+}

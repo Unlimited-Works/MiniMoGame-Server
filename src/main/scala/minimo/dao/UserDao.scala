@@ -32,5 +32,6 @@ object UserDao {
       query[Users].filter(user => user.userName == lift(username)).take(1)
     }
     run(q).headOption
+
   }
 }

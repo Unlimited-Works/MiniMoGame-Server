@@ -1,5 +1,7 @@
 package minimo.network
 
+import minimo.network.jsonsocket.{JProtoServer, JRouter}
+import minimo.network.syncsocket.{SyncProto, SyncRouter, SyncServer}
 import minimo.rxsocket.presentation.json._
 import minimo.rxsocket.session.{CommPassiveParser, CompletedProto, ConnectedSocket, ServerEntrance}
 import monix.reactive.Observable

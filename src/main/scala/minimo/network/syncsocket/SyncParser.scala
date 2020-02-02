@@ -1,32 +1,40 @@
-package minimo.network
+package minimo.network.syncsocket
 
 import java.nio.ByteBuffer
 
 import minimo.rxsocket.session.PassiveParser
+
 
 /**
   * sync protocol such as position, attack which should be quickly to handled and
   * avoid json parsing which is waste time.
   * besides, message is specify to deal with. recommend use classic json parser for normal works.
   *
+  * protocol:
+  *  protoId: Short,
+  *  position
+  *
   */
 class SyncParser(handlers: Map[Short, SyncProtoHandler]) extends PassiveParser[SyncProto](2, 'init) {
-  var currentProto = -1 //-1: SyncParser not parsing protocol
+  var handlingProto = false
+  //  var currentProto = -1 //-1: SyncParser not parsing protocol
   var currentHandler: SyncProtoHandler = _
 
   override protected def passiveReceive(symbol: Symbol, length: Int, data: Array[Byte]): (Symbol, Int, Option[SyncProto]) = {
-    currentProto match {
-      case -1 => //the callback is beginning of the proto
+    handlingProto match {
+      case false => //the callback is beginning of the proto
         // setting proto
         assert(length == 2)
         val protoId = ByteBuffer.wrap(data).getShort()
 
+        //每次都要查询？todo: 优化使用bitmap存储协议类型，因为协议类型不会太多
         handlers.get(protoId) match {
           case None =>
             throw new Exception(s"not match any protoId - $protoId")
 
           case Some(handler) =>
-            currentProto = protoId
+            handlingProto = true
+            //            currentProto = protoId
             currentHandler = handler
             (handler.initSymbol, handler.initLength, None)
         }
@@ -36,7 +44,8 @@ class SyncParser(handlers: Map[Short, SyncProtoHandler]) extends PassiveParser[S
 
         proto match {
           case Some(_) =>
-            currentProto = -1
+            handlingProto = false
+            //            currentProto = -1
             currentHandler = null
             (initSymbol, initLength, proto)
           case None =>
@@ -57,30 +66,7 @@ abstract class SyncProtoHandler( val initSymbol: Symbol,
 
 }
 
-
-class PositionSyncHandler() extends SyncProtoHandler('positionInit,12) {
-
-  override def parse(symbol: Symbol, length: Int, proto: Array[Byte]): (Symbol, Int, Option[SyncProto]) = {
-    (symbol, length) match {
-      case ('positionInit, `initLength`) =>
-        val data = ByteBuffer.wrap(proto)
-        ('x, 0, Some(PositionProto(
-          data.getFloat(),
-          data.getFloat(),
-          data.getFloat()
-        )))
-    }
-  }
-
-}
-
 abstract class SyncProto {
   val unit: SyncProto
-}
-
-case class PositionProto(x: Float, y: Float, z: Float) extends SyncProto {
-  override val unit: SyncProto = PositionProto.unit
-}
-object PositionProto {
-  val unit: PositionProto = PositionProto(0, 0, 0)
+  def encode: Array[Byte]
 }

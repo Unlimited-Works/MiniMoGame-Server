@@ -24,3 +24,7 @@ trait UserService {
     */
   def registerAccount(userName: String, password: String): Either[String, ObjectId]
 }
+
+object UserService {
+
+}

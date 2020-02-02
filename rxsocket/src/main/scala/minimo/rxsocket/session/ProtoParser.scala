@@ -31,7 +31,8 @@ abstract class ProtoParser[Proto] {
 
 //abstract class ActiveProtoParser[Proto] extends ProtoParser[Proto]
 
-abstract class PassiveParser[Proto](protected val initLength: Int, protected val initSymbol: Symbol) extends ProtoParser[Proto] {
+abstract class PassiveParser[Proto](protected val initLength: Int,
+                                    protected val initSymbol: Symbol) extends ProtoParser[Proto] {
   protected val logger = LoggerFactory.getLogger(getClass)
 
   private var nextLength = initLength
@@ -73,7 +74,8 @@ abstract class PassiveParser[Proto](protected val initLength: Int, protected val
 //      logger.info(s"engouthdata - $nextSymbol, $nextLength, ${tmpBf.position()}, ${tmpBf.limit()}, ${src.position()}, ${src.limit()}")
       src.get(myArr, 0, nextLength)
       tmpBf.put(myArr)
-      val (newSymbol, newLength, stageProto) = passiveReceive(nextSymbol, tmpLength, tmpBf.array())
+      val (newSymbol, newLength, stageProto) =
+        passiveReceive(nextSymbol, tmpLength, tmpBf.array())
 
       //更新状态
       val updatedProtos = stageProto match {

@@ -1,8 +1,13 @@
 package minimo
 
-import minimo.network.{Network, PositionProto, SyncProto}
+import java.util.concurrent.TimeUnit
+
+import minimo.dao.InitDB
+import minimo.network.Network
+import minimo.network.syncsocket.{PositionProto, SyncProto}
+import monix.execution.Scheduler
 import org.slf4j.LoggerFactory
-import route.{LoginRouter, RoomRouter, SceneRouter}
+import route.{LobbyRouter, LoginRouter, SceneRouter}
 
 /**
   *
@@ -13,6 +18,15 @@ object Main extends App {
   //init config
   MinimoConfig
 
+  import monix.execution.Scheduler.{global => scheduler}
+  val c = scheduler.scheduleWithFixedDelay(
+    0, 15, TimeUnit.SECONDS,
+    new Runnable {
+      def run(): Unit = {
+        logger.debug("init DB: " + InitDB.select2())
+      }
+    })
+
   //forbid heart beat for simple
 //  minimo.rxsocket.session.Configration.CHECK_HEART_BEAT_BREAKTIME = Int.MaxValue
 //  minimo.rxsocket.session.Configration.SEND_HEART_BEAT_BREAKTIME = Int.MaxValue
@@ -20,9 +34,9 @@ object Main extends App {
 
   val jroutes = List(
     new LoginRouter,
-    new RoomRouter,
+//    new RoomRouter,
+    new LobbyRouter,
     sceneRouter,
-
   )
 
   val syncRouters: Map[SyncProto, SceneRouter] = Map(
@@ -32,7 +46,7 @@ object Main extends App {
 
   //start network server
   logger.info(s"starting network at: ${MinimoConfig.network}")
-  new Network(
+  val network = new Network(
     MinimoConfig.network.host,
     MinimoConfig.network.port,
     MinimoConfig.network.syncPort,

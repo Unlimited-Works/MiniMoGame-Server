@@ -3,21 +3,18 @@ package minimo.rxsocket.session
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.{AsynchronousSocketChannel, ClosedChannelException, CompletionHandler, ShutdownChannelGroupException}
-import java.util.concurrent.{ConcurrentLinkedQueue, Semaphore}
 
-import org.slf4j.LoggerFactory
 import minimo.rxsocket.session.exception.{ReadResultNegativeException, SocketClosedException}
-import minimo.rxsocket._
-import minimo.rxsocket.session.implicitpkg._
+import monix.eval.Task
 import monix.execution.Ack.{Continue, Stop}
-import monix.reactive.{Observable, OverflowStrategy}
 import monix.reactive.subjects.PublishSubject
+import monix.reactive.{Observable, OverflowStrategy}
+import org.slf4j.LoggerFactory
 
-import scala.concurrent.{Future, Promise}
-import scala.util.{Failure, Success, Try}
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{Future, Promise}
 import scala.util.control.NonFatal
-import scala.concurrent.duration._
+import scala.util.{Failure, Success, Try}
 
 case class AddressPair(local: InetSocketAddress, remote: InetSocketAddress)
 case class OnSocketCloseMsg(addressPair: AddressPair, reason: String)
@@ -29,7 +26,7 @@ class ConnectedSocket[Proto](socketChannel: AsynchronousSocketChannel,
                       protoParser: ProtoParser[Proto]) {
   private val logger = LoggerFactory.getLogger(getClass)
 
-//  private val protoParser = new ReaderDispatch()
+  //  private val protoParser = new ReaderDispatch()
   private val readSubscribes = PublishSubject[Proto]
 
   private val closePromise = Promise[OnSocketCloseMsg]()
@@ -94,8 +91,11 @@ class ConnectedSocket[Proto](socketChannel: AsynchronousSocketChannel,
 
     readSubscribes
       .asyncBoundary(OverflowStrategy.BackPressure(100))
-      .doOnComplete(() => logger.debug("reading completed"))
-      .doOnError(e => logger.warn("reading completed with error - ", e))
+      .doOnCompleteF(() => logger.debug("reading completed"))
+      .doOnError(e => {
+        logger.warn("reading completed with error - ", e)
+        Task()
+      })
   }
 
   private def beginReading() = {
@@ -113,10 +113,10 @@ class ConnectedSocket[Proto](socketChannel: AsynchronousSocketChannel,
               disconnect(e.toString)
           }
         case Success(c) =>
-          val src = c.byteBuffer
-          logger.trace(s"read position: ${src.position} bytes")
-          val protos = protoParser.receive(src)
-          logger.trace(s"get protocols - $protos")
+          val src1 = c.byteBuffer
+          logger.trace(s"read position: ${src1.position()} bytes")
+          val protos1 = protoParser.receive(src1)
+          logger.trace(s"get protocols - $protos1")
 
           def publishProtoWithGoodHabit(leftProtos: Vector[Proto]): Unit = {
             leftProtos.headOption match {
@@ -138,7 +138,7 @@ class ConnectedSocket[Proto](socketChannel: AsynchronousSocketChannel,
 //            publishProtoWithGoodHabit(protos)
           }
 
-          publishProtoWithGoodHabit(protos)
+          publishProtoWithGoodHabit(protos1)
 //            protos.foreach{proto =>
 //              //filter heart beat proto
 //              logger.trace(s"completed proto - $proto")
@@ -175,7 +175,7 @@ class ConnectedSocket[Proto](socketChannel: AsynchronousSocketChannel,
               override def completed(result: Integer, attachment: Int): Unit = {
                 logger.trace(s"ConnectedSocket.send result - $result")
 //                logger.info(s"send:write result - $result")
-                p.trySuccess(Unit)
+                p.trySuccess(())
               }
 
               override def failed(exc: Throwable, attachment: Int): Unit = {
@@ -185,7 +185,7 @@ class ConnectedSocket[Proto](socketChannel: AsynchronousSocketChannel,
 
                   case _ =>
                     logger.info(s"send:write fail -")
-                    Unit
+                    ()
                 }
                 logger.warn(s"CompletionHandler fail - $exc")
                 disconnect(exc.toString)
@@ -251,9 +251,9 @@ class ConnectedSocket[Proto](socketChannel: AsynchronousSocketChannel,
           exc match {
             case _: ShutdownChannelGroupException | _: ClosedChannelException =>
 //              socketClosed = true
-              Unit
+              ()
             case _ =>
-              Unit
+              ()
           }
           logger.warn(s"socket read I/O operations fails - $exc")
           disconnect(exc.toString)

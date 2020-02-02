@@ -12,7 +12,7 @@ import scala.concurrent.{Future, Promise}
 import scala.util.{Failure, Success}
 import monix.execution.Scheduler.Implicits.global
 
-class ServerEntrance[Proto](host: String, port: Int, genParser: () => ProtoParser[Proto]) {
+class ServerEntrance[Proto](host: String, port: Int, genParser: () => ProtoParser[Proto], noDelay: Boolean = false) {
   private val logger = LoggerFactory.getLogger(getClass)
 
   private val connectionSubs = PublishSubject[ConnectedSocket[Proto]]
@@ -25,6 +25,7 @@ class ServerEntrance[Proto](host: String, port: Int, genParser: () => ProtoParse
 
     val server = AsynchronousServerSocketChannel.open(x)
     val prepared = server.bind(socketAddress)
+
     logger.info(s"server is bind at - $socketAddress")
     prepared
   }
@@ -93,6 +94,9 @@ class ServerEntrance[Proto](host: String, port: Int, genParser: () => ProtoParse
     // scala.Boolean vs java.lang.Boolean:
     // https://stackoverflow.com/questions/25665379/calling-java-generic-function-from-scala?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
     server.setOption[java.lang.Boolean](StandardSocketOptions.SO_REUSEADDR, true)
+//    if(noDelay) {
+//      server.setOption[java.lang.Boolean](StandardSocketOptions.TCP_NODELAY, true)
+//    }
     // not support yet
 //        server.setOption[java.lang.Integer](StandardSocketOptions.SO_LINGER, 3)
     //    server.setOption[java.lang.Boolean](StandardSocketOptions.SO_KEEPALIVE, true)

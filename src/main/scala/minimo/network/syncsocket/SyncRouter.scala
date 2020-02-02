@@ -1,6 +1,7 @@
-package minimo.network
+package minimo.network.syncsocket
 
-import minimo.rxsocket.session.ConnectedSocket
+import minimo.network.jsession.MinimoSession
+
 import scala.concurrent.Future
 
 /**
@@ -13,15 +14,15 @@ trait SyncRouter {
 //    SyncRouter.routes += (syncProto -> this)
 //  }
 
-  def syncFn(data: SyncProto): Future[Unit]
+  def syncFn(data: SyncProto, session: MinimoSession): Future[Unit]
 
 }
 
 class SyncRouterManager(routes: Map[SyncProto, SyncRouter]) {
 //  val routes = ()
 //  import SyncProtoUnitImp._
-  def dispatch(load: SyncProto): Future[Unit] = {
-    routes(load.unit).syncFn(load)
+  def dispatch(load: SyncProto, session: MinimoSession): Future[Unit] = {
+    routes(load.unit).syncFn(load, session)
   }
 }
 
