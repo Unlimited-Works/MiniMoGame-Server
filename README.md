@@ -4,7 +4,7 @@ Server side of the mini multi-player online game.
 ## how to run
 - init `game.sql` file for you PG database instance.
 - override config properties in `src/main/resources/reference.conf` by create `local.conf` and `online.conf` at `src/main/resources/` path.
-- `sbt run` in project root directory.
+- `sbt run` in project root directory.(might cost 5~10min at first running)
 
 ## MiniMO Server Code Specification
 - 异常处理
@@ -16,8 +16,8 @@ Server side of the mini multi-player online game.
     - 实体对象（拥有Id属性的对象，比如RoomEntity）的类命名的使用Entity后缀
     - 实体对象的创建必须使用apply方法，不允许通过new产生
     - Domain层提供基础的参数和返回值，Router层负责拼接以符合场景/网络格式需要
-    - Domain层处理需要保证并发安全和核心功能点的算法效率。
-        - 和Router层不同，这里校验的是相关数据结构整体的合理性。对于游戏逻辑的要求较弱。
+    - Domain层处理需要保证**并发安全**和核心功能点的**执行效率**。
+        - 和Router层不同，这里校验的是相关数据结构整体的合理性。Domain对于游戏逻辑的要求并不保证完全符合上下文环境校验规则。
 - 函数返回的结果是异常类型还是Either/Option由业务场景决定，如果出现多个业务场景，
   则默认的函数实现使用Either/Option，函数名使用Ex/Ex2等后缀表示throw exception的场景。
     - 如果业务场景不明确，为了通用性，优先定义Option/Either的返回类型
@@ -31,3 +31,4 @@ Server side of the mini multi-player online game.
 - 使用伴生对象apply/create/fromXXX等方法作为类的构造工厂方法，优先使用apply方法
 - git
     - setting `git config core.autocrlf true` for idea
+    - save password: `git config credential.helper store`
