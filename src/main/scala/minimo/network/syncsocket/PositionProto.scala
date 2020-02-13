@@ -4,13 +4,13 @@ import java.nio.{ByteBuffer, ByteOrder}
 import java.nio.charset.StandardCharsets
 
 
-class PositionSyncHandler() extends SyncProtoHandler('positionInit,4 * 3 + 24) {
+class PositionSyncHandler() extends SyncProtoHandler(Symbol("positionInit"),4 * 3 + 24) {
 
   override def parse(symbol: Symbol, length: Int, proto: Array[Byte]): (Symbol, Int, Option[SyncProto]) = {
     (symbol, length) match {
-      case ('positionInit, `initLength`) =>
+      case (Symbol("positionInit"), `initLength`) =>
         val data = ByteBuffer.wrap(proto)
-        ('positionInit, 4 * 3 + 24, Some(PositionProto(
+        (Symbol("positionInit"), 4 * 3 + 24, Some(PositionProto(
           data.getFloat(),
           data.getFloat(),
           data.getFloat(),

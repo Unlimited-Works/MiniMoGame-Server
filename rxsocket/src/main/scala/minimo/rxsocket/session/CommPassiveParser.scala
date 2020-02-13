@@ -13,15 +13,15 @@ class CommPassiveParser(private var tmpProto: PaddingProto) extends PassiveParse
 
   override protected def passiveReceive(symbol: Symbol, length: Int, data: Array[Byte]): (Symbol, Int, Option[CompletedProto]) = {
     (symbol, length) match {
-      case ('init, 1) => //proto type
+      case (Symbol("init"), 1) => //proto type
         tmpProto = PaddingProto(Some(data(0)), None, session.EmptyByteBuffer)
-        ('length, 4, None)
-      case ('length, 4) => //load length
+        (Symbol("length"), 4, None)
+      case (Symbol("length"), 4) => //load length
         val curLoadLength = data.toInt
         tmpProto = PaddingProto(tmpProto.uuidOpt, Some(CompletedLength(curLoadLength)), session.EmptyByteBuffer)
-        ('load, curLoadLength, None)
-      case ('load, _) => //load data
-        ('init, 1, Some(CompletedProto(
+        (Symbol("load"), curLoadLength, None)
+      case (Symbol("load"), _) => //load data
+        (Symbol("init"), 1, Some(CompletedProto(
           tmpProto.uuidOpt.get,
           tmpProto.lengthOpt.get.asInstanceOf[CompletedLength].length,
           ByteBuffer.wrap(data)

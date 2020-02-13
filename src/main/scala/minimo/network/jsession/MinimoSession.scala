@@ -4,6 +4,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 import scala.collection.mutable.{Map => MutMap}
 
+// todo put and get data use trait + case class, similar as
 case class MinimoSession(sessionId: String, data: MutMap[String, Any]) {
 
   def updateData[T](f: MutMap[String, Any] => T): T = {

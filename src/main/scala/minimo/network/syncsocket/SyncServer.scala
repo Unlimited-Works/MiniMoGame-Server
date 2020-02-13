@@ -6,7 +6,7 @@ import monix.execution.Scheduler.Implicits.global
 import monix.reactive.Observable
 
 /**
-  * SyncServer提供了一种紧凑的数据格式
+  * SyncServer提供了一种紧凑的数据格式，用于对实时要求较高的场景中
   */
 class SyncServer(host: String, port: Int, routers: Map[SyncProto, SyncRouter]) {
 

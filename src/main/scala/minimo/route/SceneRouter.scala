@@ -10,7 +10,7 @@ import org.json4s.JsonAST
 import scala.concurrent.Future
 
 /**
-  *
+  * 游戏场景服务相关
   */
 class SceneRouter() extends SyncRouter with JRouter {
 
@@ -25,7 +25,7 @@ class SceneRouter() extends SyncRouter with JRouter {
 
   override def syncFn(v1: SyncProto, session: MinimoSession): Future[Unit] = {
     v1 match {
-      case pos: PositionProto =>
+      case pos: PositionProto => //收到位置同步信息
         // 保存位置到Cache中
         PositionServiceImp.setPos("1", Position(pos.x, pos.y, pos.z))
 
