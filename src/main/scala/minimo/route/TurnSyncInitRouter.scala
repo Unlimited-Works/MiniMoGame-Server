@@ -17,23 +17,19 @@ class TurnSyncInitRouter extends JRouter {
   override def jsonRoute(protoId: String, load: JsonAST.JValue)(implicit session: MinimoSession): EndPoint = {
     protoId match {
       case TURN_SYNC_INIT_INIT_PROTO => // （为每个用户）初始化帧同步. 创建线程处理
-        logger.info("get proto: {}", load)
-        val roomEntity = TurnSyncInitRouter.getRoomSession().get
+        val roomEntity = LobbyRouter.sessionGetJoinedRoomEx
         val roomId = roomEntity.getRoomBaseInfo.roomId
         val frameEntity = FrameEntity.apply(roomId)
 
         TurnSyncInitRouter.sessionPutFrame(frameEntity)
         implicit val formats: Formats = JsonFormat.minimoFormats
 
-        val a = Map[String, Long]()
-
-        val value = frameEntity.frameStream// .map{case (k,v) => k -> v.map{(k2,v2) => k2.}}
         // return a observable
         RawAndStreamEndPoint(
           RawEndPoint(FrameInitValue(frameEntity.idFrame,
             frameEntity.systemPlayerId,
             frameEntity.currFrameCount)),
-          StreamEndPoint.fromAny(value)
+          StreamEndPoint.fromAny(frameEntity.frameStream)
         )
     }
   }
@@ -42,13 +38,7 @@ class TurnSyncInitRouter extends JRouter {
 object TurnSyncInitRouter {
   case class FrameInitValue(idFrame: ObjectId, systemPlayerId: ObjectId, currFrameCount: Long)
 
-  // session
-  def getRoomSession()(implicit session: MinimoSession): Option[RoomEntity] = {
-    session.getData(data => {
-      val joinedRoomInfo = data.get("joined_room_info")
-      joinedRoomInfo.map(_.asInstanceOf[RoomEntity])
-    })
-  }
+
 
   def sessionPutFrame(frameEntity: FrameEntity)(implicit session: MinimoSession) = {
     session.updateData(data => {
