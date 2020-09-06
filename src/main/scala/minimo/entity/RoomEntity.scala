@@ -35,7 +35,7 @@ class RoomEntity(
 
   //todo fix bug: lost some hot message
   def getRoomUserAndEvent: RoomUsersAndJoinLeaveEvent = roomId.synchronized{
-    //todo create a multicast stream: cache event util first subsribe
+    //todo create a multicast stream: cache event util first subscribe message( todo: consider performance)
     val rstStream = PublishToOneSubject[JoinAndLeaveEvent]()
     joinRoomSub.map(x => JoinAndLeaveEvent(true, x)).subscribe(rstStream)
     leaveRoomSub.map(x => JoinAndLeaveEvent(false, x)).subscribe(rstStream)

@@ -8,7 +8,7 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
   *
   */
 package object execution {
-  class CurrentThreadExecutor extends Executor {
+  object CurrentThreadExecutor extends Executor {
     def execute( r: Runnable) = {
       r.run()
     }
@@ -19,7 +19,7 @@ package object execution {
     * @return
     */
   def currentThread = {
-    val currentExe = new CurrentThreadExecutor
+    val currentExe = CurrentThreadExecutor
     ExecutionContext.fromExecutor(currentExe)
   }
 

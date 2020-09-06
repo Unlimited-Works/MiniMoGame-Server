@@ -10,7 +10,7 @@ import minimo.util.ObjectId
 case class PlayerEntity(playerId: ObjectId,
                         userInfo: UserInfo,
                         role: Role.Value,
-                        
+
                         var position: Position,
                         var direction: Direction.Value) {
 

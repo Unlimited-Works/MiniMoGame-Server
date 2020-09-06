@@ -7,7 +7,7 @@ import minimo.network.Network
 import minimo.network.syncsocket.{PositionProto, SyncProto}
 import monix.execution.Scheduler
 import org.slf4j.LoggerFactory
-import route.{LobbyRouter, LoginRouter, SceneRouter}
+import route.{LobbyRouter, LoginRouter, SceneRouter, TurnSyncInitRouter, TurnSyncRouter}
 
 /**
   *
@@ -37,6 +37,8 @@ object Main extends App {
 //    new RoomRouter,
     new LobbyRouter,
     sceneRouter,
+    new TurnSyncInitRouter,
+    new TurnSyncRouter
   )
 
   val syncRouters: Map[SyncProto, SceneRouter] = Map(

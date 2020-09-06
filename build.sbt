@@ -26,7 +26,7 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq(
       "com.typesafe" % "config" % "1.3.3",
       "org.postgresql" % "postgresql" % "42.1.4",
-      "io.getquill" %% "quill-jdbc" % "3.5.0",
+      "io.getquill" %% "quill-jdbc" % "3.5.1",
       "ch.qos.logback" % "logback-classic" % "1.2.3",
       "junit" % "junit" % "4.12" % Test,
 

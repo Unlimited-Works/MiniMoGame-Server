@@ -20,6 +20,14 @@ package object route {
   val LOBBY_LIVE_ROOM_PROTO="LOBBY_LIVE_ROOM_PROTO"
 //  val SYNC_POSITION_PROTO = "SYNC_POSITION_PROTO"
 
+
+  // Turn Sync Init
+  val TURN_SYNC_INIT_INIT_PROTO = "TURN_SYNC_INIT_INIT_PROTO"
+
+
+  // turn sync
+  val TURN_SYNC_INPUT_PROTO = "TURN_SYNC_INPUT_PROTO"
+
   implicit val formats: Formats = JsonFormat.minimoFormats
 
 }
