@@ -6,12 +6,9 @@ import minimo.entity.RoomEntity._
 import minimo.exception.{BizCode, BizException}
 import minimo.route.LoginRouter.UserInfo
 import minimo.util.ObjectId
-import monix.execution.Cancelable
 import monix.reactive.Observable
-import monix.reactive.observers.Subscriber
 import monix.reactive.subjects.{PublishSubject, PublishToOneSubject, ReplaySubject}
 import monix.execution.Scheduler.Implicits.global
-import monix.reactive.observables.ConnectableObservable
 
 import scala.collection.mutable
 
@@ -82,9 +79,10 @@ class RoomEntity(
     }
   }
 
-  def startGame(): Unit = {
+  def startGame(): List[RoomUserInfo] = {
     this.roomId.synchronized {
       this.roomStatus = RoomStatus.GAMING
+      this.roomUsers.toList
     }
   }
 

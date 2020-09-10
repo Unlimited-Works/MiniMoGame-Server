@@ -75,7 +75,12 @@ class LobbyRouter extends JRouter {
         RawEndPoint(rst)
 
       case LOBBY_START_GAME_PROTO => //游戏开始
-        this.startGame
+        val roomEntity = LobbyRouter.sessionGetJoinedRoomEx
+
+        //set room state
+        val curUsers = roomEntity.startGame()
+        RawEndPoint(curUsers)
+
     }
 
   }
@@ -102,17 +107,17 @@ class LobbyRouter extends JRouter {
     * 设置房间的状态（todo：房间的状态使用actor模型的become状态机控制比较合理。
     *               避免过多的flag变量，导致业务流程代码繁琐）
     */
-  private def startGame(implicit minimoSession: MinimoSession): EndPoint = {
-    //todo: check room state is satisfy begin game
-
-    //set room state
-    val roomEntity = LobbyRouter.sessionGetJoinedRoomEx
-    roomEntity.startGame()
-    RawEndPoint(true)
-
-    //create a scene
-
-  }
+//  private def startGame(implicit minimoSession: MinimoSession): EndPoint = {
+//    //todo: check room state is satisfy begin game
+//
+//    //set room state
+//    val roomEntity = LobbyRouter.sessionGetJoinedRoomEx
+//    val curUsers = roomEntity.startGame()
+//    RawEndPoint(curUsers)
+//
+//    //create a scene
+//
+//  }
 
 }
 
