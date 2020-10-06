@@ -16,14 +16,14 @@ Server side of the mini multi-player online game powered by frame sync(turn-sync
 - `sbt run` in project root directory.(might cost 5~10min at first running)
 
 ## screen shoot
-- examples in [screen_shoot folder](https://gitee.com/unlimited-code/minimogame-u3d/blob/master/screen_shoot)  
+- examples in [screen_shoot folder](https://github.com/Unlimited-Works/MiniMoGame-Server/tree/master/screen_shoot)  
 
-![pingpang_login](https://github.com/Unlimited-Works/MiniMoGame-Server/tree/master/screen_shoot/pingpang_login.png)
-![pingpang_lobby](https://github.com/Unlimited-Works/MiniMoGame-Server/tree/master/screen_shoot/pingpang_lobby.png)
-![pingpang_game_begin](https://github.com/Unlimited-Works/MiniMoGame-Server/tree/master/screen_shoot/pingpang_game_begin.png)
-![pingpang_game_begin](https://github.com/Unlimited-Works/MiniMoGame-Server/tree/master/screen_shoot/pingpang_game_a.png)
-![pingpang_game_b](https://github.com/Unlimited-Works/MiniMoGame-Server/tree/master/screen_shoot/pingpang_game_b.png)
-![pingpang_game_end](https://github.com/Unlimited-Works/MiniMoGame-Server/tree/master/screen_shoot/pingpang_game_end.png)
+![pingpang_login](https://github.com/Unlimited-Works/MiniMoGame-Server/blob/master/screen_shoot/pingpang_login.png?raw=true)
+![pingpang_lobby](https://github.com/Unlimited-Works/MiniMoGame-Server/blob/master/screen_shoot/pingpang_lobby.png?raw=true)
+![pingpang_game_begin](https://github.com/Unlimited-Works/MiniMoGame-Server/blob/master/screen_shoot/pingpang_game_begin.png?raw=true)
+![pingpang_game_begin](https://github.com/Unlimited-Works/MiniMoGame-Server/blob/master/screen_shoot/pingpang_game_a.png?raw=true)
+![pingpang_game_b](https://github.com/Unlimited-Works/MiniMoGame-Server/blob/master/screen_shoot/pingpang_game_a.png?raw=true)
+![pingpang_game_end](https://github.com/Unlimited-Works/MiniMoGame-Server/blob/master/screen_shoot/pingpang_game_end.png?raw=true)
 
 ## MiniMO Server Code Specification
 - 异常处理
