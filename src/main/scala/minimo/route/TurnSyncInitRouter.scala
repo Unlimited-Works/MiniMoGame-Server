@@ -2,7 +2,7 @@ package minimo.route
 
 import minimo.entity.{FrameEntity, RoomEntity}
 import minimo.network.jsession.MinimoSession
-import minimo.network.jsonsocket.{EndPoint, JRouter, RawAndStreamEndPoint, RawEndPoint, StreamEndPoint}
+import minimo.network.jsonsocket.{EndPoint, JRouter, RawAndStreamEndPoint, RawAndStreamValue, RawEndPoint, StreamEndPoint}
 import minimo.route.TurnSyncInitRouter.FrameInitValue
 import minimo.util.{JsonFormat, ObjectId}
 import org.json4s.{Formats, JArray, JsonAST}
@@ -26,10 +26,12 @@ class TurnSyncInitRouter extends JRouter {
 
         // return a observable
         RawAndStreamEndPoint(
-          RawEndPoint(FrameInitValue(frameEntity.idFrame,
-            frameEntity.systemPlayerId,
-            frameEntity.currFrameCount)),
-          StreamEndPoint.fromAny(frameEntity.frameStream)
+          RawAndStreamValue(
+            RawEndPoint.fromCaseClass(FrameInitValue(frameEntity.idFrame,
+              frameEntity.systemPlayerId,
+              frameEntity.currFrameCount)),
+            StreamEndPoint.fromAny(frameEntity.frameStream)
+          )
         )
     }
   }

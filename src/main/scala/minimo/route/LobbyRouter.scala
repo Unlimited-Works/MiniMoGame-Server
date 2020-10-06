@@ -4,7 +4,7 @@ import minimo.entity.RoomEntity
 import minimo.entity.RoomEntity.RoomUsersAndJoinLeaveEvent
 import minimo.exception.{BizCode, BizException}
 import minimo.network.jsession.MinimoSession
-import minimo.network.jsonsocket.{EndPoint, JProtoEvent, JRouter, RawAndStreamEndPoint, RawEndPoint, StreamEndPoint}
+import minimo.network.jsonsocket.{EndPoint, JProtoEvent, JRouter, MultipleSessions, RawAndStreamEndPoint, RawAndStreamValue, RawEndPoint, StreamEndPoint}
 import minimo.route.LoginRouter.UserInfo
 import minimo.util.ObjectId
 import org.json4s.Extraction._
@@ -29,7 +29,7 @@ class LobbyRouter extends JRouter {
 
         val JString(roomName) = load
         val currentUser = LoginRouter.getCurrentUserInfoEx
-        val (roomEntity, roomUserInfo) = RoomEntity.apply(UserInfo(currentUser.userId, currentUser.userName), roomName)
+        val (roomEntity, roomUserInfo) = RoomEntity.apply(UserInfo(currentUser.userId, currentUser.userName, session.sessionId), roomName)
         assert(LobbyRouter.sessionPutJoinedRoom(roomEntity).isEmpty)
         RawEndPoint(decompose(roomUserInfo))
 
@@ -47,7 +47,7 @@ class LobbyRouter extends JRouter {
         val roomUserInfo = roomEntity.joinRoomEx(LoginRouter.getCurrentUserInfoEx)
         LobbyRouter.sessionPutJoinedRoom(roomEntity)
 
-        RawEndPoint(roomUserInfo)
+        RawEndPoint.fromCaseClass(roomUserInfo)
       case LOBBY_JOIN_ROOM_BY_NAME_PROTO => // 收到一个选择房间的消息（为了简化客户端流程） todo: use LOBBY_JOIN_ROOM_PROTO instead
         LobbyRouter.checkUserNotInRoomEx
 
@@ -56,15 +56,17 @@ class LobbyRouter extends JRouter {
         val roomUserInfo = roomEntity.joinRoomEx(LoginRouter.getCurrentUserInfoEx)
         LobbyRouter.sessionPutJoinedRoom(roomEntity)
 
-        RawEndPoint(roomUserInfo)
+        RawEndPoint.fromCaseClass(roomUserInfo)
       case LOBBY_GET_ROOM_USERINFO_PROTO => //获取当前房间的用户信息, 返回一个stream
         val roomEntity: RoomEntity = LobbyRouter.sessionGetJoinedRoomEx
         val RoomUsersAndJoinLeaveEvent(roomUser, joinAndLeaveStream) =
                 roomEntity.getRoomUserAndEvent
 
         RawAndStreamEndPoint(
-          RawEndPoint(roomUser),
-          StreamEndPoint.fromAny(joinAndLeaveStream)
+          RawAndStreamValue(
+            RawEndPoint.fromCaseClass(roomUser),
+            StreamEndPoint.fromAny(joinAndLeaveStream)
+          )
         )
 
       case LOBBY_LIVE_ROOM_PROTO => //离开房间
@@ -72,14 +74,15 @@ class LobbyRouter extends JRouter {
         val userInfo = LoginRouter.getCurrentUserInfoEx
         val rst = roomEntity.leaveRoomEx(userInfo)
         LobbyRouter.sessionDelJoinedRoom(roomEntity)
-        RawEndPoint(rst)
+        RawEndPoint.fromCaseClass(rst)
 
       case LOBBY_START_GAME_PROTO => //游戏开始
         val roomEntity = LobbyRouter.sessionGetJoinedRoomEx
 
         //set room state
         val curUsers = roomEntity.startGame()
-        RawEndPoint(curUsers)
+
+        RawEndPoint.fromCaseClass(curUsers, sendMode = MultipleSessions(Set.from(curUsers.map(_.userInfo.sessionId))))
 
     }
 

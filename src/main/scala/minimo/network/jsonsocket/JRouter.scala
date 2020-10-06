@@ -43,17 +43,17 @@ class JRouterManager {
     * @param load: message client send here
     * @return
     */
-  def dispatch(load: JValue)(implicit session: MinimoSession): EndPoint = {
+  def dispatch(path: String, protoId: String, load: JValue)(implicit session: MinimoSession): EndPoint = {
     try {
-      val JString(path) = load \ "path"
-      val JString(protoId) = load \ "protoId"
+//      val JString(path) = load \ "path"
+//      val JString(protoId) = load \ "protoId"
 
       val route = routes(path)
-      route.jsonRoute(protoId, load \ "load")
+      route.jsonRoute(protoId, load)
     } catch {
       case bex @ BizException(code, desc) =>
         logger.error("jproto dispatch error: ", bex)
-        ErrorEndPoint(code.toString, desc, bex)
+        ErrorEndPoint(ErrorValue(code.toString, desc, bex))
       case NonFatal(ex) =>
         logger.error("dispatch exception: ", ex)
         SystemErrorEndPoint(ex)

@@ -41,13 +41,15 @@ class LoginRouter extends JRouter {
                 case Some(_) => //让前一个用户强制退出
                 case None => ()
               }
-              LoginRouter.setCurrentUserInfo(UserInfo(oid, username))
+              // 这是当前用户已经登录
+
+              LoginRouter.setCurrentUserInfo(UserInfo(oid, username, session.sessionId))
               JString(oid.toString)
             case None => JNull
           }
 
         }
-        RawEndPoint(jsonRsp)
+        RawEndPoint.fromTry(jsonRsp)
       case REGISTER_PROTO =>
         val LoginOrRegReq(username, password) = reqJson.extract[LoginOrRegReq]
 
@@ -76,7 +78,7 @@ class LoginRouter extends JRouter {
 
 object LoginRouter {
   case class LoginOrRegReq(userName: String, password: String)
-  case class UserInfo(userId: ObjectId, userName: String)
+  case class UserInfo(userId: ObjectId, userName: String, sessionId: String)
 
   def getCurrentUserInfo(implicit session: MinimoSession): Option[UserInfo] = {
     session.getData(data => {

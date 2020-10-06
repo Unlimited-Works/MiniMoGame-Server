@@ -1,5 +1,7 @@
 package minimo.network.jsonsocket
 
+import java.util.concurrent.ConcurrentHashMap
+
 import minimo.network.jsession.MinimoSession
 import minimo.rxsocket.presentation.json.JProtocol
 import monix.execution.Ack
@@ -18,6 +20,7 @@ import scala.util.{Failure, Success}
 
 class JProtoServer(jProtos: Observable[JProtocol], routes: List[JRouter]) {
   protected val logger: Logger = LoggerFactory.getLogger(getClass)
+  protected val sessionSkt = new ConcurrentHashMap[String, JProtocol]()
 
   val jRouterManager = new JRouterManager()
 
@@ -26,6 +29,7 @@ class JProtoServer(jProtos: Observable[JProtocol], routes: List[JRouter]) {
   val protoWithSession: Observable[(JProtocol, MinimoSession)] = jProtos.map(jproto => {
     val sessionId = jproto.connectedSocket.addressPair.remote.toString //remote ip and port as sessionId
     val minimoSession = MinimoSession(sessionId, MutMap())
+    this.sessionSkt.put(sessionId, jproto)
     (jproto, minimoSession)
   })
 
@@ -34,7 +38,7 @@ class JProtoServer(jProtos: Observable[JProtocol], routes: List[JRouter]) {
     sktWithSession match {
       case (skt, session) =>
         implicit val minimoSession: MinimoSession = session
-        JProtoServer.registerEvent(skt, routes)(session)
+        this.registerEvent(skt, routes)(session)
 
         skt.jRead.subscribe { jValue =>
           logger.info(s"get the socket json: {}", compact(render(jValue)))
@@ -43,18 +47,18 @@ class JProtoServer(jProtos: Observable[JProtocol], routes: List[JRouter]) {
             * protocol form client:
             * {
             *   taskId: ...
+            *   path: ...
+            *   protoId: ...
             *   load: {
-            *     path: ...
-            *     protoId: ...
-            *     load: {
-            *       ...`load-protocol`
-            *     }
+            *       ...
             *   }
             * }
             */
           val load = jValue \ "load"
           val taskId = jValue \ "taskId"
-          val endPoint = jRouterManager.dispatch(load)
+          val JString(path) = jValue \ "path"
+          val JString(protoId) = jValue \ "protoId"
+          val endPoint = jRouterManager.dispatch(path, protoId, load)
 
           /**
             * protocol to client in `load-protocol`:
@@ -69,25 +73,7 @@ class JProtoServer(jProtos: Observable[JProtocol], routes: List[JRouter]) {
             *   }
             * }
             */
-          val rst: Future[Ack] = endPoint match {
-            case raw @ RawEndPoint(_) =>
-              JProtoServer.handleRawEndPoint(raw, taskId, skt)
-            case fur @ FurEndPoint(_) =>
-              JProtoServer.handleFurEndPoint(fur, taskId, skt)
-            case stream @ StreamEndPoint(_) =>
-              JProtoServer.handleStreamEndPoint(stream, taskId, skt)
-            case rawAndStream @ RawAndStreamEndPoint(_, _) =>
-              JProtoServer.handleRawAndStreamEndPoint(rawAndStream, taskId, skt)
-            case EmptyEndPoint => ()
-              Continue
-            case ErrorEndPoint(code, desc, _ex) =>
-              val finalJson = ("taskId" -> taskId) ~ ("type" -> "error") ~ ("status" -> "end") ~
-                ("load" -> (("code" -> code) ~ ("desc" -> desc)))
-              skt.sendRaw(finalJson).foreach(_ =>
-                logger.info(s"send json: {}", compact(render(finalJson)))
-              )
-              Continue
-          }
+          val rst: Future[Ack] = this.handleEndPoint(skt, endPoint, taskId, path, protoId)
           rst
         }
 
@@ -96,31 +82,50 @@ class JProtoServer(jProtos: Observable[JProtocol], routes: List[JRouter]) {
 
   }
 
-}
+  private def handleEndPoint(skt: JProtocol, endPoint: EndPoint, taskId: JValue, path: String, protoId: String): Future[Ack] = {
+    endPoint match {
+      case raw @ RawEndPoint(value, sendMode) =>
+        this.handleRawEndPoint(raw, taskId, skt, sendMode, path, protoId)
+      case fur @ FurEndPoint(value, sendMode) =>
+        this.handleFurEndPoint(fur, taskId, skt, sendMode, path, protoId)
+      case stream @ StreamEndPoint(value, sendMode) =>
+        this.handleStreamEndPoint(stream, taskId, skt, sendMode, path, protoId)
+      case rawAndStream @ RawAndStreamEndPoint(RawAndStreamValue(raw, stream), sendMode) =>
+        this.handleRawAndStreamEndPoint(rawAndStream, taskId, skt, sendMode, path, protoId)
+      case EmptyEndPoint => ()
+        Continue
+      case ErrorEndPoint(ErrorValue(code, desc, ex), sendMode) =>
+        val finalJson = ("taskId" -> taskId) ~ ("path" -> path) ~("protoId" -> protoId) ~ ("type" -> "error") ~ ("status" -> "end") ~
+          ("load" -> (("code" -> code) ~ ("desc" -> desc)))
+        this.sendJsonRsp(finalJson, skt, sendMode).foreach(_ =>
+          logger.info(s"send json: {}", compact(render(finalJson)))
+        )
+        Continue
+    }
+  }
 
-object JProtoServer {
-  protected val logger: Logger = LoggerFactory.getLogger(getClass)
-
-  protected def handleRawEndPoint(rawEndPoint: RawEndPoint, taskId: JValue, skt: JProtocol) = {
+  private def handleRawEndPoint(rawEndPoint: RawEndPoint, taskId: JValue, skt: JProtocol, sendMode: SendMode, path: String, protoId: String) = {
     val jValRst = rawEndPoint.value
     val rst: Future[Ack] = jValRst match {
       case Failure(e) =>
         val finalJson =
           ("taskId" -> taskId) ~
+            ("path" -> path) ~ ("protoId" -> protoId) ~
             ("type" -> "once") ~
             ("status" -> "error") ~
             ("load" -> e.getMessage)
-        skt.sendRaw(finalJson).flatMap(_ => {
+        this.sendJsonRsp(finalJson, skt, sendMode).flatMap(_ => {
           logger.info(s"send json: {}", compact(render(finalJson)))
           Continue
         })
       case Success(rst) =>
         val finalJson =
           ("taskId" -> taskId) ~
+            ("path" -> path) ~ ("protoId" -> protoId) ~
             ("type" -> "once") ~
             ("status" -> "end") ~
             ("load" -> rst)
-        skt.sendRaw(finalJson).flatMap(_ => {
+        this.sendJsonRsp(finalJson, skt, sendMode).flatMap(_ => {
           logger.info(s"send json: {}", compact(render(finalJson)))
           Continue
         })
@@ -136,19 +141,20 @@ object JProtoServer {
     * @param skt
     * @return
     */
-  protected def handleStreamEndPoint(streamEndPoint: StreamEndPoint, taskId: JValue, skt: JProtocol): Future[Ack] = {
+  private def handleStreamEndPoint(streamEndPoint: StreamEndPoint, taskId: JValue, skt: JProtocol, sendMode: SendMode, path: String, protoId: String): Future[Ack] = {
     val jValRst = streamEndPoint.value
     val promise = Promise[Ack]
     jValRst.subscribe(
       event => {
         val finalJson: JValue =
           ("taskId" -> taskId) ~
+            ("path" -> path) ~ ("protoId" -> protoId) ~
             ("type" -> "stream") ~
             ("status" -> "on") ~
             ("load" -> event)
 
         //this stream i
-        skt.sendRaw(finalJson).flatMap(_ => {
+        this.sendJsonRsp(finalJson, skt, sendMode).flatMap(_ => {
           logger.info(s"send json: {}", compact(render(finalJson)))
           Continue
         })
@@ -157,11 +163,12 @@ object JProtoServer {
         logger.error("StreamEndPoint failed:", error)
         val finalJson: JValue =
           ("taskId" -> taskId) ~
+            ("path" -> path) ~ ("protoId" -> protoId) ~
             ("type" -> "stream") ~
             ("status" -> "error") ~
             ("load" -> error.getMessage)
 
-        val rst: Future[Ack] = skt.sendRaw(finalJson).flatMap(_ => {
+        val rst: Future[Ack] = this.sendJsonRsp(finalJson, skt, sendMode).flatMap(_ => {
           logger.info(s"send json: {}", compact(render(finalJson)))
           Continue
         })
@@ -172,10 +179,11 @@ object JProtoServer {
       () => {
         val finalJson: JValue =
           ("taskId" -> taskId) ~
+            ("path" -> path) ~ ("protoId" -> protoId) ~
             ("type" -> "stream") ~
             ("status" -> "end")
 
-        skt.sendRaw(finalJson).foreach(_ =>
+        this.sendJsonRsp(finalJson, skt, sendMode).foreach(_ =>
           logger.info(s"send json: {}", compact(render(finalJson)))
         )
 
@@ -188,33 +196,27 @@ object JProtoServer {
     Continue
   }
 
-  def handleRawAndStreamEndPoint(rawAndStreamEndPoint: RawAndStreamEndPoint, taskId: JValue, skt: JProtocol): Future[Ack] = {
-    val RawAndStreamEndPoint(rawEndPoint, streamEndPoint) = rawAndStreamEndPoint
+  private def handleRawAndStreamEndPoint(rawAndStreamEndPoint: RawAndStreamEndPoint, taskId: JValue, skt: JProtocol, sendMode: SendMode, path: String, protoId: String): Future[Ack] = {
+    val RawAndStreamValue(rawEndPoint, streamEndPoint) = rawAndStreamEndPoint.value
     val JString(taskIdStr) = taskId
-    val eventualAck = handleRawEndPoint(rawEndPoint, taskIdStr+":head", skt)
-    val eventualAck1 = handleStreamEndPoint(streamEndPoint, taskIdStr+":stream", skt)
-//    for {
-//      r1 <- eventualAck
-//      r2 <- eventualAck1
-//    } yield {
-//     r2
-//    }
-
+    val eventualAck = handleRawEndPoint(rawEndPoint, taskIdStr+":head", skt, sendMode, path, protoId)
+    val eventualAck1 = handleStreamEndPoint(streamEndPoint, taskIdStr+":stream", skt, sendMode, path, protoId)
     eventualAck
   }
 
-  protected def handleFurEndPoint(furEndPoint: FurEndPoint, taskId: JValue, skt: JProtocol): Future[Ack] = {
+  private def handleFurEndPoint(furEndPoint: FurEndPoint, taskId: JValue, skt: JProtocol, sendMode: SendMode, path: String, protoId: String): Future[Ack] = {
     val jValRstFur = furEndPoint.value
     val p = Promise[Unit]
     jValRstFur.map(jValRst => {
       val finalJson =
         ("taskId" -> taskId) ~
+          ("path" -> path) ~ ("protoId" -> protoId) ~
           ("type" -> "once") ~
           ("status" -> "end") ~
           ("load" -> jValRst)
       p.completeWith({
         logger.info(s"send json: {}", compact(render(finalJson)))
-        skt.sendRaw(finalJson)
+        this.sendJsonRsp(finalJson, skt, sendMode)
       })
 
     })
@@ -223,12 +225,13 @@ object JProtoServer {
 
       val finalJson =
         ("taskId" -> taskId) ~
+          ("path" -> path) ~ ("protoId" -> protoId) ~
           ("type" -> "once") ~
           ("status" -> "error") ~
           ("load" -> error.getMessage)
       p.completeWith({
         logger.info(s"send json: {}", compact(render(finalJson)))
-        skt.sendRaw(finalJson)
+        this.sendJsonRsp(finalJson, skt, sendMode)
       })
     }
 
@@ -237,15 +240,15 @@ object JProtoServer {
   }
 
   //register event
-  protected def registerEvent(skt: JProtocol, routes: List[JRouter])(implicit minimoSession: MinimoSession): Unit = {
+  private def registerEvent(skt: JProtocol, routes: List[JRouter])(implicit minimoSession: MinimoSession): Unit = {
     val onDisconnect = skt.connectedSocket.onDisconnected
     onDisconnect.onComplete(disconnectEvent => {
       logger.debug("disconnectEvent occurred")
-      routes.map(router => {
+      routes.foreach(router => {
         //1. 执行router触发事件
         try{
           router.onEvent(JProtoEvent.SocketDisconnect(disconnectEvent))
-            .foreach(_compelted => {
+            .foreach(_ => {
               //2. 清除session
               MinimoSession.clear(minimoSession.sessionId)
             })
@@ -256,4 +259,28 @@ object JProtoServer {
       })
     })
   }
+
+  private def sendJsonRsp(value: JValue, selfProto: JProtocol, sendMode: SendMode): Future[Unit] = {
+    val jprotos = this.selectUserByMode(selfProto, sendMode)
+    val rst = jprotos.map(item => item.sendRaw(value))
+    Future.sequence(rst).map(_ => Future.successful())
+  }
+
+  private def selectUserByMode(selfProto: JProtocol, sendMode: SendMode): Set[JProtocol] = {
+    sendMode match {
+      case Non => Set.empty
+      case a @ Self => Set(selfProto)
+      case a @ Zone(zoneId) => ???
+      case Zones(zoneIds, excludeSessions, excludeSelf) => ???
+      case MultipleSessions(sessionIds) =>
+        val rst = sessionIds.flatMap { s => {
+          Option(this.sessionSkt.get(s))
+        }}
+
+
+
+        rst
+    }
+  }
+
 }
