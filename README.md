@@ -44,8 +44,7 @@ Server side of the mini multi-player online game powered by frame sync(turn-sync
     - 变量需要加锁处理并发。每个用户的JProto消息都是顺序性的，只有前一个消息处理完成，才会处理后续的消息，异步的请求也是顺序处理。
       多个用户之间的操作是并发性的。
 - Router层的逻辑代码，维护session状态，需要保证在业务异常时的正确性，保证请求的合理性。
-- 【todo】当前的Router模型仅支持面向socket链接的一对一推送，并没有支持广播模式
-    - 广播模式支持一对多的消息推送，比如房间中有用户进入时，会广播进入消息到当前房间的用户。
+- 当前的Router模型默认使用面向socket链接的一对一推送，可以在发送时选择需要的广播模式
 - 校验类别的函数名字以check开头
 - 使用伴生对象apply/create/fromXXX等方法作为类的构造工厂方法，优先使用apply方法
 - git
