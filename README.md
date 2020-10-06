@@ -15,6 +15,16 @@ Server side of the mini multi-player online game powered by frame sync(turn-sync
 - override config properties in `src/main/resources/reference.conf` by create `local.conf` and `online.conf` at `src/main/resources/` path.
 - `sbt run` in project root directory.(might cost 5~10min at first running)
 
+## screen shoot
+- examples in [screen_shoot folder](https://gitee.com/unlimited-code/minimogame-u3d/blob/master/screen_shoot)  
+
+![pingpang_login](https://github.com/Unlimited-Works/MiniMoGame-Server/tree/master/screen_shoot/pingpang_login.png)
+![pingpang_lobby](https://github.com/Unlimited-Works/MiniMoGame-Server/tree/master/screen_shoot/pingpang_lobby.png)
+![pingpang_game_begin](https://github.com/Unlimited-Works/MiniMoGame-Server/tree/master/screen_shoot/pingpang_game_begin.png)
+![pingpang_game_begin](https://github.com/Unlimited-Works/MiniMoGame-Server/tree/master/screen_shoot/pingpang_game_a.png)
+![pingpang_game_b](https://github.com/Unlimited-Works/MiniMoGame-Server/tree/master/screen_shoot/pingpang_game_b.png)
+![pingpang_game_end](https://github.com/Unlimited-Works/MiniMoGame-Server/tree/master/screen_shoot/pingpang_game_end.png)
+
 ## MiniMO Server Code Specification
 - 异常处理
     - 异常日志在try-catch中打印，其他地方不要打异常日志
