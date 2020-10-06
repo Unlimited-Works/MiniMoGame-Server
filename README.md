@@ -1,5 +1,14 @@
 # MiniMOGame-Server
-Server side of the mini multi-player online game.
+Server side of the mini multi-player online game powered by frame sync(turn-sync).
+
+## client-side project
+- https://gitee.com/unlimited-code/minimogame-u3d
+
+## features current support
+- Turn-Sync PingPang Game. support:
+    - login
+    - lobby & room
+    - ping-pang game scene
 
 ## how to run
 - init `game.sql` file for you PG database instance.
