@@ -20,6 +20,9 @@ case class FrameEntity(idFrame: ObjectId,
                         var currFrameCount: Long,
                         frameStream: Observable[FrameData]
                 ) {
+  private var gameLoop: Thread = _
+  private var isRunning = true
+  private var frameSubject: ReplaySubject[FrameData] = _
   private val frameCount = 1 // 1帧
   def putCurFrame(playerId: ObjectId, cmds: List[String]): Unit = this.synchronized {
     val theCurFrameCount = currFrameCount
@@ -49,14 +52,14 @@ case class FrameEntity(idFrame: ObjectId,
     }
   }
 
-  def startGameLoop(subject: ReplaySubject[FrameData]):
+  protected def startGameLoop(subject: ReplaySubject[FrameData]):
 //            Observable[(Long, Map[ObjectId, List[String]])] = {
             Observable[FrameData] = {
-
+    frameSubject = subject
     // todo: 1. await 3s and do frame command with server side FPS setting
     //       2. use thread pool and timer wheel scheduler
-    new Thread(() => {
-      while (true) {
+    val theGameLoop = new Thread(() => {
+      while (isRunning) {
         val curTime = System.currentTimeMillis()
 
         // do logic: 转发这一帧收集的消息
@@ -74,9 +77,16 @@ case class FrameEntity(idFrame: ObjectId,
 
         Thread.sleep(1000 / frameCount - ( System.currentTimeMillis() - curTime))
       }
-    }).start()
+    })
+    theGameLoop.start()
+    gameLoop = theGameLoop
 
     subject
+  }
+
+  def closeGame(): Unit = {
+    isRunning = false
+    frameSubject.onComplete()
   }
 
 }

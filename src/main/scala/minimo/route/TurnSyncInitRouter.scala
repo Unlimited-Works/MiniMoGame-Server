@@ -54,6 +54,13 @@ object TurnSyncInitRouter {
     })
   }
 
+  def sessionRemoveFrame()(implicit session: MinimoSession): Option[FrameEntity] = {
+    session.getData(data => {
+      data.remove("turn_sync:frame").map(_.asInstanceOf[FrameEntity])
+    })
+  }
+
+
   /**
     * 执行帧同步逻辑，主要是转发
     * @param session

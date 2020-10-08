@@ -24,9 +24,11 @@ package object route {
   // Turn Sync Init
   val TURN_SYNC_INIT_INIT_PROTO = "TURN_SYNC_INIT_INIT_PROTO"
 
-
   // turn sync
   val TURN_SYNC_INPUT_PROTO = "TURN_SYNC_INPUT_PROTO"
+  // end frame sync
+  val TURN_SYNC_END_PROTO = "TURN_SYNC_END_PROTO"
+
 
   implicit val formats: Formats = JsonFormat.minimoFormats
 
