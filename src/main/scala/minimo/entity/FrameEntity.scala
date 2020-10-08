@@ -18,12 +18,13 @@ case class FrameEntity(idFrame: ObjectId,
                         frames: MHashMap[Long, MHashMap[ObjectId, List[String]]],
                         systemPlayerId: ObjectId, // 代表系统本身
                         var currFrameCount: Long,
-                        frameStream: Observable[FrameData]
+                        frameStream: Observable[FrameData],
+                        frameCount: Int,
+
                 ) {
   private var gameLoop: Thread = _
   private var isRunning = true
   private var frameSubject: ReplaySubject[FrameData] = _
-  private val frameCount = 1 // 1帧
   def putCurFrame(playerId: ObjectId, cmds: List[String]): Unit = this.synchronized {
     val theCurFrameCount = currFrameCount
     val frameOpt = frames.get(theCurFrameCount)
@@ -101,7 +102,7 @@ object FrameEntity {
   case class FrameData(frameCount: Long, frameValues: List[FrameValue])
   case class FrameValue(userId: ObjectId, cmds: List[String])
   // create a FrameEntity or get from exist
-  def apply(roomId: ObjectId): FrameEntity = {
+  def apply(roomId: ObjectId, netFrame: Int): FrameEntity = {
     var newCreated: Boolean = false
     var subject: ReplaySubject[FrameData] = null
 
@@ -121,7 +122,7 @@ object FrameEntity {
         subject = ReplaySubject[FrameData]()
 
         val entity = new FrameEntity(idFrame, playerAndCmds,frames,
-          systemPlayerId, firstFrameCount, subject)
+          systemPlayerId, firstFrameCount, subject, netFrame)
 
         frameEntities.put(idFrame, entity)
         newCreated = true

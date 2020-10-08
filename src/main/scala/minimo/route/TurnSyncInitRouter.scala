@@ -5,6 +5,7 @@ import minimo.network.jsession.MinimoSession
 import minimo.network.jsonsocket.{EndPoint, JRouter, RawAndStreamEndPoint, RawAndStreamValue, RawEndPoint, StreamEndPoint}
 import minimo.route.TurnSyncInitRouter.FrameInitValue
 import minimo.util.{JsonFormat, ObjectId}
+import org.json4s.JsonAST.JInt
 import org.json4s.{Formats, JArray, JsonAST}
 import org.slf4j.LoggerFactory
 
@@ -17,9 +18,11 @@ class TurnSyncInitRouter extends JRouter {
   override def jsonRoute(protoId: String, load: JsonAST.JValue)(implicit session: MinimoSession): EndPoint = {
     protoId match {
       case TURN_SYNC_INIT_INIT_PROTO => // （为每个用户）初始化帧同步. 创建线程处理
+        val JInt(netFrame) = load
+
         val roomEntity = LobbyRouter.sessionGetJoinedRoomEx
         val roomId = roomEntity.getRoomBaseInfo.roomId
-        val frameEntity = FrameEntity.apply(roomId)
+        val frameEntity = FrameEntity.apply(roomId, netFrame.intValue)
 
         TurnSyncInitRouter.sessionPutFrame(frameEntity)
         implicit val formats: Formats = JsonFormat.minimoFormats
