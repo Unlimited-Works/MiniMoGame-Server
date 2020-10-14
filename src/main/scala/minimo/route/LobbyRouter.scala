@@ -1,7 +1,7 @@
 package minimo.route
 
 import minimo.entity.RoomEntity
-import minimo.entity.RoomEntity.RoomUsersAndJoinLeaveEvent
+import minimo.entity.RoomEntity.{RoomUserInfo, RoomUsersAndJoinLeaveEvent}
 import minimo.exception.{BizCode, BizException}
 import minimo.network.jsession.MinimoSession
 import minimo.network.jsonsocket.{EndPoint, JProtoEvent, JRouter, MultipleSessions, RawAndStreamEndPoint, RawAndStreamValue, RawEndPoint, StreamEndPoint}
@@ -59,8 +59,9 @@ class LobbyRouter extends JRouter {
         RawEndPoint.fromCaseClass(roomUserInfo)
       case LOBBY_GET_ROOM_USERINFO_PROTO => //获取当前房间的用户信息, 返回一个stream
         val roomEntity: RoomEntity = LobbyRouter.sessionGetJoinedRoomEx
+        val currentUserInfo = LoginRouter.getCurrentUserInfoEx
         val RoomUsersAndJoinLeaveEvent(roomUser, joinAndLeaveStream) =
-                roomEntity.getRoomUserAndEvent
+                roomEntity.getRoomUserAndCreateEvent(currentUserInfo.userId)
 
         RawAndStreamEndPoint(
           RawAndStreamValue(
@@ -131,6 +132,8 @@ object LobbyRouter {
   case class JoinedRoomInfo(roomId: String, roomName: String)
   case class CreateRoomReq(roomName: String)
   case class JoinAndLeaveEvent(joinEvent: UserInfo, leaveEvent: UserInfo)
+  case class GameBeginRsp(netFrameCount: Long, phyFrameCount: Long, currUsers: List[RoomUserInfo])
+
 //  case class GetRoomUserRsp(: String, roomName: String)
 
   //session 的key使用定义的case object，即方便查找，也比enum方便扩展

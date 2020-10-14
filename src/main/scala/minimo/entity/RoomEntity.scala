@@ -30,14 +30,27 @@ class RoomEntity(
   leaveRoomSub.subscribe()
   val leaveRoomStream: Observable[RoomUserInfo] = leaveRoomSub
 
-  //todo fix bug: lost some hot message
-  def getRoomUserAndEvent: RoomUsersAndJoinLeaveEvent = roomId.synchronized{
-    //todo create a multicast stream: cache event util first subscribe message( todo: consider performance)
-    val rstStream = PublishToOneSubject[JoinAndLeaveEvent]()
-    joinRoomSub.map(x => JoinAndLeaveEvent(true, x)).subscribe(rstStream)
-    leaveRoomSub.map(x => JoinAndLeaveEvent(false, x)).subscribe(rstStream)
+  // catch operation
+  private val userRoomJoinEvents = mutable.HashMap[ObjectId, PublishToOneSubject[JoinAndLeaveEvent]]()
 
-    RoomUsersAndJoinLeaveEvent(roomUsers.toList, rstStream)
+  // todo 订阅的取消订阅的代码一定要是成对的！！防止内存泄漏。现在Rx库都是基础的流式功能，没有应用场景的封装。
+  //      stream当成类中的一等成员，这里表示每个房间里面的成员都有
+  //todo fix bug: lost some hot message
+  // 创建一个事件
+  def getRoomUserAndCreateEvent(userId: ObjectId): RoomUsersAndJoinLeaveEvent = roomId.synchronized{
+//    userRoomJoinEvents.get(userId) match {
+//      case None =>
+      //todo create a multicast stream: cache event util first subscribe message( todo: consider performance)
+      val rstStream = PublishToOneSubject[JoinAndLeaveEvent]()
+      userRoomJoinEvents.put(userId, rstStream)
+      joinRoomSub.map(x => JoinAndLeaveEvent(true, x)).subscribe(rstStream)
+      leaveRoomSub.map(x => JoinAndLeaveEvent(false, x)).subscribe(rstStream)
+
+      RoomUsersAndJoinLeaveEvent(roomUsers.toList, rstStream)
+//      case Some(stream) =>
+//        RoomUsersAndJoinLeaveEvent(roomUsers.toList, stream)
+//    }
+
 
   }
 
@@ -144,6 +157,14 @@ class RoomEntity(
 
     //event emit
     if(rst.isRight) {
+      // 取消事件
+      // todo 这里的代码最好写成事件的形式，每个函数实际都相当于触发了一个事件。
+      //      代码需要分层，各司其职才能更好的长期维护。明显，在这里触发取消订阅是不合理的——离开房间并
+      //      没有取消订阅消息的职责。
+      //      期望有一个编程语言能把事件当成第一成员对待，比如这里离开房间开始触发以及执行完成时，其他部分代码都可以订阅到
+      //      roomEntity.subBegin(:levelRoom, userInfo) or
+      //      roomEntity.subEnd(method: levelRoom, param: userInfo, return: Either[...])
+      this.userRoomJoinEvents.remove(roomUserInfo.userInfo.userId).foreach(event => event.onComplete())
       leaveRoomSub.onNext(roomUserInfo)
     }
     rst
