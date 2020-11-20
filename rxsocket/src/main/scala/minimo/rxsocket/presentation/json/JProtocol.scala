@@ -174,6 +174,7 @@ class JProtocol(val connectedSocket: ConnectedSocket[CompletedProto], read: Obse
     }
   }
 
+  // todo： 不抛出异常。客户端断线很正常
   def sendRaw(jValue: JValue): Future[Unit] = {
     if (connectedSocket.isSocketClosed) {
       Future.failed(SocketClosedException)

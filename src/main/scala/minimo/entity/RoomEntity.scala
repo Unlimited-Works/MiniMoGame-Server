@@ -127,7 +127,7 @@ class RoomEntity(
     */
   def leaveRoom(roomUserInfo: RoomUserInfo): Either[RoomFailResult.Value, LeaveRoomRst] =
                                                                 this.roomId.synchronized {
-    assert(this.roomStatus == RoomStatus.OPEN)
+//    assert(this.roomStatus == RoomStatus.OPEN) // 用户可能为游戏中离开房间
     val user = roomUserInfo.userInfo
     val rst = if(this.owner.userId == user.userId) { //当前用户为房主,将房主转移给另外一个人
       val movedCurrentUser = this.roomUsers.remove(roomUserInfo)

@@ -2,7 +2,8 @@
 Server side of the mini multi-player online game powered by frame sync(turn-sync).
 
 ## client-side project
-- https://gitee.com/unlimited-code/minimogame-u3d
+- [MiniMO PingPang Game](https://gitee.com/unlimited-code/minimogame-u3d)
+- [MiniMO Tank Game](https://gitee.com/unlimited-code/minimotank-u3d)
 
 ## features current support
 - Turn-Sync PingPang Game. support:
