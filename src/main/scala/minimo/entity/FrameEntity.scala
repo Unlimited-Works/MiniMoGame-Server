@@ -25,6 +25,9 @@ case class FrameEntity(idFrame: ObjectId,
   private var gameLoop: Thread = _
   private var isRunning = true
   private var frameSubject: ReplaySubject[FrameData] = _
+
+  // 覆盖操作
+  // todo 按照输入模块进行覆盖。比如攻击操作，移动操作的指令在同一帧情况下，可以同时存在
   def putCurFrame(playerId: ObjectId, cmds: List[String]): Unit = this.synchronized {
     val theCurFrameCount = currFrameCount
     val frameOpt = frames.get(theCurFrameCount)
