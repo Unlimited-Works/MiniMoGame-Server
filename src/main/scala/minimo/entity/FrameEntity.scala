@@ -2,7 +2,7 @@ package minimo.entity
 
 import java.util.concurrent.ConcurrentHashMap
 
-import minimo.entity.FrameEntity.{FrameData, FrameValue}
+import minimo.entity.FrameEntity.{Cmd, FrameData, FrameValue}
 import minimo.util.ObjectId
 import monix.reactive.Observable
 import monix.reactive.subjects.ReplaySubject
@@ -14,8 +14,8 @@ import scala.collection.mutable.{HashMap => MHashMap}
   * record game scene frame data
   */
 case class FrameEntity(idFrame: ObjectId,
-                        playerAndCmds: MHashMap[ObjectId, List[String]],
-                        frames: MHashMap[Long, MHashMap[ObjectId, List[String]]],
+                        playerAndCmds: MHashMap[ObjectId, List[Cmd]],
+                        frames: MHashMap[Long, MHashMap[ObjectId, List[Cmd]]],
                         systemPlayerId: ObjectId, // 代表系统本身
                         var currFrameCount: Long,
                         frameStream: Observable[FrameData],
@@ -28,20 +28,20 @@ case class FrameEntity(idFrame: ObjectId,
 
   // 覆盖操作
   // todo 按照输入模块进行覆盖。比如攻击操作，移动操作的指令在同一帧情况下，可以同时存在
-  def putCurFrame(playerId: ObjectId, cmds: List[String]): Unit = this.synchronized {
+  def putCurFrame(playerId: ObjectId, cmds: List[Cmd]): Unit = this.synchronized {
     val theCurFrameCount = currFrameCount
     val frameOpt = frames.get(theCurFrameCount)
     frameOpt match {
       case Some(frame) =>
         frame.put(playerId, cmds)
       case None =>
-        val frame = new MHashMap[ObjectId, List[String]]()
+        val frame = new MHashMap[ObjectId, List[Cmd]]()
         frame.put(playerId, cmds)
         frames.put(theCurFrameCount, frame)
     }
   }
 
-  private def putNewFrame(playerId: ObjectId, cmds: List[String]): Unit = this.synchronized {
+  private def putNewFrame(playerId: ObjectId, cmds: List[Cmd]): Unit = this.synchronized {
     val nextFrameCount = currFrameCount + 1
     currFrameCount += 1
 
@@ -50,7 +50,7 @@ case class FrameEntity(idFrame: ObjectId,
       case Some(frame) =>
         frame.put(playerId, cmds)
       case None =>
-        val frame = new MHashMap[ObjectId, List[String]]()
+        val frame = new MHashMap[ObjectId, List[Cmd]]()
         frame.put(playerId, cmds)
         frames.put(nextFrameCount, frame)
     }
@@ -77,7 +77,7 @@ case class FrameEntity(idFrame: ObjectId,
 
 
         // 创建一个新的帧信息
-        putNewFrame(systemPlayerId, List("init"))
+        putNewFrame(systemPlayerId, List(Cmd("init", Nil)))
 
         Thread.sleep(1000 / frameCount - ( System.currentTimeMillis() - curTime))
       }
@@ -103,7 +103,8 @@ object FrameEntity {
   private val roomIdAndFrameEntities = new ConcurrentHashMap[ObjectId, FrameEntity]()
 
   case class FrameData(frameCount: Long, frameValues: List[FrameValue])
-  case class FrameValue(userId: ObjectId, cmds: List[String])
+  case class Cmd(key: String, param: List[String])
+  case class FrameValue(userId: ObjectId, cmds: List[Cmd])
   // create a FrameEntity or get from exist
   def apply(roomId: ObjectId, netFrame: Int): FrameEntity = {
     var newCreated: Boolean = false
@@ -112,19 +113,19 @@ object FrameEntity {
     val fe = roomIdAndFrameEntities.compute(roomId, (_, v) => {
       if(v == null) {
         val idFrame = new ObjectId()
-        val playerAndCmds = MHashMap[ObjectId, List[String]]()
-        val frames = MHashMap[Long, MHashMap[ObjectId, List[String]]]()
+        val playerAndCmds = MHashMap[ObjectId, List[Cmd]]()
+        val frames = MHashMap[Long, MHashMap[ObjectId, List[Cmd]]]()
         val systemPlayerId = new ObjectId()
         val firstFrameCount = 0L
         frames.put(firstFrameCount, {
-          val firstFrameData = new MHashMap[ObjectId, List[String]]()
-          firstFrameData.put(systemPlayerId, List("init"))
+          val firstFrameData = new MHashMap[ObjectId, List[Cmd]]()
+          firstFrameData.put(systemPlayerId, List(Cmd("init", Nil)))
           firstFrameData
         })
 
         subject = ReplaySubject[FrameData]()
 
-        val entity = new FrameEntity(idFrame, playerAndCmds,frames,
+        val entity = new FrameEntity(idFrame, playerAndCmds, frames,
           systemPlayerId, firstFrameCount, subject, netFrame)
 
         frameEntities.put(idFrame, entity)

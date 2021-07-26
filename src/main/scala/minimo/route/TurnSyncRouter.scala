@@ -20,7 +20,7 @@ class TurnSyncRouter extends JRouter {
   override def jsonRoute(protoId: String, load: JsonAST.JValue)(implicit session: MinimoSession): EndPoint = {
     protoId match {
       case TURN_SYNC_INPUT_PROTO => //输入信息同步（后续要做限流，这里相信客户端按照频率发送）
-        val inputKey = load.extract[String]
+        val inputKey = load.extract[FrameEntity.Cmd]
 
         val frameEntity: FrameEntity = TurnSyncInitRouter.sessionGetFrame().get
         val userInfo = LoginRouter.getCurrentUserInfoEx
