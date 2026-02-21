@@ -5,6 +5,7 @@
 .idea
 *.iml
 target/
+.bsp
 
 #TEMP FILE
 *.log
@@ -15,3 +16,6 @@ null
 # private config
 online.conf
 local.conf
+
+# cluade
+/.claude

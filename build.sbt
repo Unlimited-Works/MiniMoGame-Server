@@ -9,7 +9,7 @@ lazy val root = (project in file("."))
         description := "minimo game server backend",
         version := "0.1",
         cancelable in Global := true,
-        scalaVersion := "2.13.1",
+        scalaVersion := "2.13.14",
         scalacOptions ++= Seq(
           "-deprecation",
           "-feature",

@@ -19,13 +19,15 @@ object Main extends App {
   MinimoConfig
 
   import monix.execution.Scheduler.{global => scheduler}
-  val c = scheduler.scheduleWithFixedDelay(
-    0, 15, TimeUnit.SECONDS,
-    new Runnable {
-      def run(): Unit = {
-        logger.debug("init DB: " + InitDB.select2())
-      }
-    })
+  if (!dao.mockMode) {
+    scheduler.scheduleWithFixedDelay(
+      0, 15, TimeUnit.SECONDS,
+      new Runnable {
+        def run(): Unit = {
+          logger.debug("init DB: " + InitDB.select2())
+        }
+      })
+  }
 
   //forbid heart beat for simple
 //  minimo.rxsocket.session.Configration.CHECK_HEART_BEAT_BREAKTIME = Int.MaxValue
